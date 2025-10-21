@@ -1,0 +1,17 @@
+/* Полностью скрываем глобальные хедеры/футеры внутри client */
+header,
+footer,
+.client-bottom-nav,
+.ui-footer,
+.ui-header {
+  display: none !important;
+}
+
+/* Чистый фон и отступы */
+.client-dashboard {
+  background-color: #f7f8f9;
+}
+
+body {
+  overflow-x: hidden;
+}

@@ -1,7 +1,6 @@
 import type { NextConfig } from 'next'
 
-const nextConfig: NextConfig = {
-  output: 'export', // включаем экспорт в /out
+const nextConfig: NextConfig = { // включаем экспорт в /out
   images: {
     unoptimized: true, // чтобы изображения работали при экспорте
   },

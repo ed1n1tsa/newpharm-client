@@ -1,8 +1,10 @@
+//app/banches/page.tsx
 'use client'
 
 import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase-browser'
+
 
 // Импорт из app/branches/
 const BranchesMap = dynamic(() => import('./BranchesMap'), { ssr: false })

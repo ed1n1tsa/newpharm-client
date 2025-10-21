@@ -1,11 +1,24 @@
-// ui/ProductList.tsx
 "use client";
 
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Category, Product } from "@/lib/mockData";
 import ProductCard from "./ProductCard";
 import ProductFilter from "./ProductFilter";
+
+type Product = {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  image_url: string;
+  short_desc?: string | null;
+  full_desc?: string | null;
+};
+
+type Category = {
+  id: string;
+  name: string;
+};
 
 type Props = {
   categories: Category[];
@@ -16,33 +29,30 @@ export default function ProductList({ categories, allProducts }: Props) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
+  // 🧠 Фильтрация по категории и поиску
   const filtered = useMemo(() => {
-    const byCat = activeCategory
-      ? allProducts.filter((p) => p.categoryId === activeCategory)
-      : allProducts;
+    let byCat = allProducts;
+
+    if (activeCategory) {
+      byCat = allProducts.filter(
+        (p) =>
+          p.category &&
+          p.category.toLowerCase().replace(/\s+/g, "-") === activeCategory
+      );
+    }
 
     const bySearch = search.trim()
       ? byCat.filter((p) =>
-          p.title.toLowerCase().includes(search.trim().toLowerCase())
+          p.name.toLowerCase().includes(search.trim().toLowerCase())
         )
       : byCat;
 
-    // На странице каталога показываем по 6 шт на категорию (как в ТЗ).
-    if (!activeCategory) {
-      const map = new Map<string, number>();
-      return bySearch.filter((p) => {
-        const used = map.get(p.categoryId) || 0;
-        if (used >= 6) return false;
-        map.set(p.categoryId, used + 1);
-        return true;
-      });
-    }
-    return bySearch;
+    return bySearch; // ⚡ убрали лимит 6 шт
   }, [activeCategory, allProducts, search]);
 
   return (
     <section className="container mx-auto px-4 mt-8">
-      {/* Только на мобильном — быстрый фильтр */}
+      {/* 🔹 Мобильный фильтр */}
       <div className="md:hidden mb-4">
         <div className="flex gap-2 overflow-x-auto no-scrollbar">
           <button
@@ -80,7 +90,7 @@ export default function ProductList({ categories, allProducts }: Props) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6">
-        {/* Левый фильтр (десктоп) */}
+        {/* 🔹 Левый фильтр (десктоп) */}
         <aside className="hidden md:block">
           <ProductFilter
             categories={categories}
@@ -90,7 +100,7 @@ export default function ProductList({ categories, allProducts }: Props) {
           />
         </aside>
 
-        {/* Сетка карточек */}
+        {/* 🔹 Сетка карточек */}
         <div>
           <AnimatePresence mode="popLayout">
             <motion.div
@@ -101,8 +111,21 @@ export default function ProductList({ categories, allProducts }: Props) {
               transition={{ duration: 0.35 }}
               className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
             >
-              {filtered.map((p) => (
-                <ProductCard key={p.id} product={p} />
+              {filtered.map((p, index) => (
+                <ProductCard
+                  key={`${p.id}-${index}`}
+                  product={{
+                    id: p.id,
+                    title: p.name,
+                    price: p.price,
+                    image: p.image_url || "/images/product.png",
+                    description:
+                      p.short_desc ||
+                      p.full_desc ||
+                      "Описание временно отсутствует.",
+                    category: p.category,
+                  }}
+                />
               ))}
             </motion.div>
           </AnimatePresence>

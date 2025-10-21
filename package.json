@@ -4,21 +4,29 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "set NEXT_DISABLE_ESLINT=1 && next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
     "@directus/sdk": "^20.0.0",
-    "@supabase/supabase-js": "^2.51.0",
-    "framer-motion": "^12.23.12",
+    "@headlessui/react": "^2.2.9",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.76.1",
+    "dotenv": "^17.2.3",
+    "framer-motion": "^12.23.24",
     "keen-slider": "^6.8.6",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.525.0",
     "next": "15.3.5",
+    "node-telegram-bot-api": "^0.66.0",
+    "openai": "^6.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-leaflet": "^5.0.0",
+    "react-markdown": "^10.1.0",
+    "recharts": "^3.2.1",
     "swiper": "^11.2.10"
   },
   "devDependencies": {

@@ -14,8 +14,6 @@ import {
 const navItems = [
   { href: '/', label: 'Главная', icon: Home },
   { href: '/catalog', label: 'Каталог', icon: Boxes },
-  { href: '/cart', label: 'Корзина', icon: ShoppingCart },
-  { href: '/doctors', label: 'Врачи', icon: Stethoscope },
   { href: '/profile', label: 'Профиль', icon: User }
 ]
 

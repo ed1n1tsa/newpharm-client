@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- Общая тема админки ---------- */
+html,
+body {
+  @apply font-inter bg-gray-50 text-gray-900;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------- Фирменные цвета CRM ---------- */
+:root {
+  --color-brand: #14b8a6; /* teal-500 */
+  --color-brand-hover: #0d9488; /* teal-600 */
+  --color-brand-light: #ccfbf1; /* teal-100 */
+}
+
+/* ---------- Кнопки ---------- */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 font-semibold rounded-md transition;
+}
+
+.btn-primary {
+  @apply bg-teal-500 text-white hover:bg-teal-600;
+}
+
+.btn-outline {
+  @apply border border-teal-500 text-teal-600 hover:bg-teal-50;
+}
+
+/* ---------- Таблицы ---------- */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th {
+  @apply bg-gray-50 text-left px-4 py-2 text-sm font-semibold text-gray-700;
+}
+
+td {
+  @apply px-4 py-2 text-sm text-gray-800 border-t;
+}
+
+/* ---------- Скроллбар ---------- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 4px;
+}

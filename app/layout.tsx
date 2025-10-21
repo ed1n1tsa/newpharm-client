@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/styles/globals.css";
 
-import Header from "@/ui/Header";
-import Footer from "@/ui/Footer";
-import MobileNav from "@/ui/MobileNav";
-import Providers from "@/ui/Providers"; // ✅ единый провайдер
+import Providers from "@/ui/Providers";
+import { SupabaseListener } from "@/lib/supabase-listener";
+import LayoutContent from "@/ui/LayoutContent"; // 👈 импортируем новый клиентский компонент
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,19 +23,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="ru">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
         <Providers>
-          <div className="bg-background text-text min-h-screen flex flex-col">
-            <Header />
-            <main className="flex-grow">{children}</main>
-            <MobileNav />
-            <Footer />
-          </div>
+          <SupabaseListener />
+          <LayoutContent>{children}</LayoutContent>
         </Providers>
       </body>
     </html>

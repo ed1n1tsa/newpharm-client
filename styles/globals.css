@@ -7,6 +7,62 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------- Общие базовые стили ---------- */
+
+html,
 body {
-  @apply font-inter bg-[#1E1E1E] text-text;  /* Устанавливаем фон #1E1E1E */
+  @apply font-inter text-text bg-[#1E1E1E];
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px; /* если есть фиксированное меню */
+  -webkit-tap-highlight-color: transparent; /* убирает подсветку при тапе */
 }
+
+/* ---------- Изображения и видео ---------- */
+img,
+video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  user-select: none;
+  pointer-events: none; /* чтобы нельзя было случайно двигать изображение */
+}
+
+/* ---------- Универсальные фиксы ---------- */
+* {
+  box-sizing: border-box;
+}
+
+section {
+  overflow: hidden; /* предотвращает сдвиги контента при адаптации */
+}
+
+/* ---------- Для стабильности высоты на мобилках ---------- */
+:root {
+  --vh: 1vh;
+}
+body {
+  height: calc(var(--vh, 1vh) * 100);
+}
+
+/* ---------- Сброс скролла при смене секций ---------- */
+main {
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+}
+
+/* ---------- 🔹 Убираем полосу прокрутки (scrollbar) ---------- */
+/* Применяется к любым элементам с классом .no-scrollbar */
+
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE и Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari и Opera */
+}
+
+/* ---------- Пример: мобильный фильтр категорий ---------- */
+/* В твоём ProductList уже есть: <div className="flex gap-2 overflow-x-auto no-scrollbar"> */
+/* Теперь линия скролла на мобильных исчезнет полностью, но свайп останется */

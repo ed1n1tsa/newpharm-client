@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase-admin'
 import Image from 'next/image'
 
 const STATUS_LABELS: Record<string, string> = {
