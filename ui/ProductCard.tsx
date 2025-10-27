@@ -6,7 +6,10 @@ import Link from "next/link"
 import { ShoppingCart } from "lucide-react"
 import { supabase } from "@/lib/supabase-browser"
 
+type Variant = "grid" | "list"
+
 type Props = {
+  variant?: Variant
   product: {
     id: string
     title: string
@@ -17,7 +20,7 @@ type Props = {
   }
 }
 
-export default function ProductCard({ product }: Props) {
+export default function ProductCard({ product, variant = "grid" }: Props) {
   const [fav, setFav] = useState(false)
   const [adding, setAdding] = useState(false)
   const [added, setAdded] = useState(false)
@@ -33,7 +36,7 @@ export default function ProductCard({ product }: Props) {
         return
       }
 
-      // Получаем корзину пользователя (или создаем новую)
+      // 🔹 Получаем или создаём корзину
       let { data: cart } = await supabase
         .from("carts")
         .select("id")
@@ -50,26 +53,20 @@ export default function ProductCard({ product }: Props) {
         cart = newCart
       }
 
-      // Проверяем, есть ли уже этот товар в корзине
+      // 🔹 Проверяем наличие товара
       const { data: existing } = await supabase
-  .from("cart_items")
-  .select("id, quantity")
-  .eq("cart_id", cart!.id) // ✅ добавили "!"
-  .eq("product_id", product.id)
-  .maybeSingle()
-
+        .from("cart_items")
+        .select("id, quantity")
+        .eq("cart_id", cart!.id)
+        .eq("product_id", product.id)
+        .maybeSingle()
 
       if (existing) {
-        // 🔹 Если товар уже есть — увеличиваем количество
-        const newQty = existing.quantity + 1
         await supabase
           .from("cart_items")
-          .update({
-            quantity: newQty,
-          })
+          .update({ quantity: existing.quantity + 1 })
           .eq("id", existing.id)
       } else {
-        // 🔹 Если товара нет — добавляем новый
         const { error } = await supabase.from("cart_items").insert({
           cart_id: cart!.id,
           product_id: product.id,
@@ -118,43 +115,97 @@ export default function ProductCard({ product }: Props) {
         </svg>
       </button>
 
-      {/* 🖼 Фото */}
-      <Link href={`/client/products/${product.id}`}>
-        <div className="aspect-[16/9] rounded-xl bg-slate-100 overflow-hidden mb-3">
-          <img
-            src={product.image}
-            alt={product.title}
-            className="h-full w-full object-contain transition-transform hover:scale-105 duration-300"
-          />
+      {variant === "list" ? (
+        <div className="flex items-start gap-4">
+          {/* Фото */}
+          <Link href={`/client/products/${product.id}`} className="shrink-0 w-36 h-24 rounded-lg bg-slate-100 overflow-hidden">
+            <img
+              src={product.image}
+              alt={product.title}
+              className="h-full w-full object-contain"
+            />
+          </Link>
+
+          {/* Инфо */}
+          <div className="flex-1">
+            <div className="text-slate-900 font-bold mb-1">
+              {product.price.toLocaleString("ru-RU")} ₸
+            </div>
+            <Link
+              href={`/client/products/${product.id}`}
+              className="text-sm text-slate-800 hover:text-emerald-600 line-clamp-2 font-medium"
+            >
+              {product.title}
+            </Link>
+            {product.description && (
+              <p className="text-xs text-slate-500 line-clamp-2 mt-1">
+                {product.description}
+              </p>
+            )}
+            <button
+              disabled={adding}
+              onClick={handleAddToCart}
+              className={`mt-3 rounded-full px-4 py-2.5 text-white font-semibold transition inline-flex items-center justify-center gap-2 ${
+                added
+                  ? "bg-emerald-600"
+                  : adding
+                  ? "bg-gray-400"
+                  : "bg-emerald-500 hover:bg-emerald-600"
+              }`}
+            >
+              <ShoppingCart className="size-5" />
+              {added ? "Добавлено!" : adding ? "Добавление..." : "В корзину"}
+            </button>
+          </div>
         </div>
-      </Link>
+      ) : (
+        <>
+          {/* Плитка */}
+          <Link href={`/client/products/${product.id}`}>
+            <div className="aspect-[16/9] rounded-xl bg-slate-100 overflow-hidden mb-3">
+              <img
+                src={product.image}
+                alt={product.title}
+                className="h-full w-full object-contain transition-transform hover:scale-105 duration-300"
+              />
+            </div>
+          </Link>
 
-      {/* 🧾 Инфо */}
-      <div className="space-y-1">
-        <div className="text-slate-900 font-bold">{product.price.toLocaleString("ru-RU")} ₸</div>
-        <Link
-          href={`/client/products/${product.id}`}
-          className="text-sm text-slate-800 line-clamp-2 hover:text-emerald-600"
-        >
-          {product.title}
-        </Link>
-      </div>
+          {/* 🧾 Инфо */}
+          <div className="mt-2 space-y-1">
+            <div className="text-slate-900 font-bold text-base">
+              {product.price.toLocaleString("ru-RU")} ₸
+            </div>
+            <Link
+              href={`/client/products/${product.id}`}
+              className="text-sm font-medium text-slate-800 hover:text-emerald-600 line-clamp-2"
+            >
+              {product.title}
+            </Link>
+            {product.description && (
+              <p className="text-xs text-slate-500 line-clamp-2">
+                {product.description}
+              </p>
+            )}
+          </div>
 
-      {/* 🛒 Кнопка */}
-      <button
-        disabled={adding}
-        onClick={handleAddToCart}
-        className={`mt-4 w-full rounded-full px-5 py-2.5 text-white font-semibold transition inline-flex items-center justify-center gap-2 ${
-          added
-            ? "bg-emerald-600"
-            : adding
-            ? "bg-gray-400"
-            : "bg-emerald-500 hover:bg-emerald-600"
-        }`}
-      >
-        <ShoppingCart className="size-5" />
-        {added ? "Добавлено!" : adding ? "Добавление..." : "В корзину"}
-      </button>
+          {/* 🛒 Кнопка */}
+          <button
+            disabled={adding}
+            onClick={handleAddToCart}
+            className={`mt-4 w-full rounded-full px-5 py-2.5 text-white font-semibold transition inline-flex items-center justify-center gap-2 ${
+              added
+                ? "bg-emerald-600"
+                : adding
+                ? "bg-gray-400"
+                : "bg-emerald-500 hover:bg-emerald-600"
+            }`}
+          >
+            <ShoppingCart className="size-5" />
+            {added ? "Добавлено!" : adding ? "Добавление..." : "В корзину"}
+          </button>
+        </>
+      )}
     </motion.article>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import '@/styles/client.css'
 import { supabase } from '@/lib/supabase-browser'
@@ -26,31 +27,47 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     <div className="client-dashboard min-h-screen flex bg-[#f7f8f9] text-gray-800 relative">
       {/* 📁 Левая панель (desktop) */}
       <aside className="hidden md:flex flex-col w-[280px] bg-white border-r shadow-sm">
-        <div className="p-6 border-b text-emerald-600 font-semibold text-lg">
-          Нью-Фарм
-        </div>
+        {/* 🔰 Логотип */}
+        <Link
+          href="/"
+          className="p-6 border-b flex items-center gap-3 text-emerald-600 font-semibold text-lg"
+        >
+          <Image
+            src="/logoNew.png"
+            alt="Нью-Фарм логотип"
+            width={36}
+            height={36}
+            className="rounded-md object-contain"
+            priority
+          />
+          <span className="tracking-wide">Нью-Фарм</span>
+        </Link>
 
+        {/* 🔗 Меню */}
         <div className="flex-1 px-4 py-5 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            const active = pathname === item.href
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-[15px] font-medium transition ${
-                  active
-                    ? 'bg-emerald-50 text-emerald-700 border-l-4 border-emerald-500'
-                    : 'hover:bg-gray-100 text-gray-700'
-                }`}
-              >
-                <Icon className="h-[18px] w-[18px]" />
-                {item.label}
-              </Link>
-            )
-          })}
+          {navItems
+            .filter((item) => !item.mobileOnly) // 👈 убираем "Ещё"
+            .map((item) => {
+              const Icon = item.icon
+              const active = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-[15px] font-medium transition ${
+                    active
+                      ? 'bg-emerald-50 text-emerald-700 border-l-4 border-emerald-500'
+                      : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  <Icon className="h-[18px] w-[18px]" />
+                  {item.label}
+                </Link>
+              )
+            })}
         </div>
 
+        {/* 👤 Пользователь + выход */}
         <div className="p-5 border-t text-sm">
           {userEmail && (
             <div className="text-gray-700 font-medium truncate">{userEmail}</div>

@@ -3,7 +3,7 @@ import Hero from '@/ui/Hero'
 import ServicesSection from '@/ui/ServicesSection'
 import NewsReels from '@/ui/NewsReels'
 import CatalogView from '@/ui/ProductList'
-
+import Pagination from "@/ui/Pagination"
 // ⚙️ Количество товаров на страницу
 const PAGE_SIZE = 200
 
@@ -48,21 +48,7 @@ export default async function HomePage({ searchParams }: { searchParams: { page?
             <CatalogView categories={categories || []} allProducts={products} />
 
             {/* 🔹 Навигация по страницам */}
-            <div className="flex justify-center mt-8 gap-3">
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <a
-                  key={i}
-                  href={`/?page=${i + 1}`}
-                  className={`px-3 py-2 rounded-lg border ${
-                    currentPage === i + 1
-                      ? 'bg-emerald-500 text-white border-emerald-500'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-                  }`}
-                >
-                  {i + 1}
-                </a>
-              ))}
-            </div>
+            <Pagination totalPages={totalPages} />
           </>
         ) : (
           <p className="text-gray-600">Товары пока отсутствуют.</p>

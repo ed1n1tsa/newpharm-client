@@ -30,12 +30,12 @@ export default function Footer() {
 
         {/* Карта */}
         <div>
-          <h4 className="text-lg font-semibold text-slate-900 mb-2">Мы на карте:</h4>
-          <div className="rounded-xl overflow-hidden shadow-md">
+          <h4 className="text-lg font-semibold text-slate-900 mb-3">Мы на карте:</h4>
+
+          <div className="relative w-full h-[320px] md:h-[400px] rounded-xl overflow-hidden border border-slate-200 shadow-md">
             <iframe
               src="https://yandex.kz/map-widget/v1/?ll=51.867512%2C47.115214&z=16&oid=105830064578"
-              width="100%"
-              height="250"
+              className="absolute inset-0 w-full h-full"
               allowFullScreen
               style={{ border: 0 }}
               loading="lazy"
@@ -43,6 +43,11 @@ export default function Footer() {
             ></iframe>
           </div>
         </div>
+      </div>
+
+      {/* Низ футера */}
+      <div className="mt-10 border-t pt-4 text-center text-sm text-slate-500">
+        © 2025 НЬЮ-ФАРМ. Все права защищены.
       </div>
     </footer>
   )
