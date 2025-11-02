@@ -9,6 +9,8 @@ import { supabase } from '@/lib/supabase-browser'
 import { LogOut } from 'lucide-react'
 import MobileNavClient from './MobileNavClient'
 import { navItems } from './navItems'
+import FloatingCartButton from './FloatingCartButton'
+
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -87,6 +89,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
       {/* 📱 Мобильное меню */}
       <MobileNavClient />
+  {/* 🛒 Плавающая кнопка корзины */}
+  <FloatingCartButton />
+    
+      
     </div>
   )
 }

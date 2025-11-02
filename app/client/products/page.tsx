@@ -17,7 +17,7 @@ async function getProducts() {
       .select("*")
       .eq("is_active", true)
       .order("updated_at", { ascending: false })
-      .limit(1000)
+      .limit(10000)
 
     if (error) throw error
 

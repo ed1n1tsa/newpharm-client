@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { ShoppingCart } from "lucide-react"
@@ -24,6 +24,7 @@ export default function ProductCard({ product, variant = "grid" }: Props) {
   const [fav, setFav] = useState(false)
   const [adding, setAdding] = useState(false)
   const [added, setAdded] = useState(false)
+  const imgRef = useRef<HTMLImageElement>(null)
 
   async function handleAddToCart() {
     try {
@@ -76,6 +77,17 @@ export default function ProductCard({ product, variant = "grid" }: Props) {
         if (error) throw error
       }
 
+      // ✈️ Анимация полёта
+      flyToCart()
+
+      // ✅ Локально обновляем счётчик корзины
+      if (
+        typeof window !== "undefined" &&
+        typeof (window as any).incrementCartCount === "function"
+      ) {
+        ;(window as any).incrementCartCount()
+      }
+
       setAdded(true)
       setTimeout(() => setAdded(false), 2000)
     } catch (err: any) {
@@ -84,6 +96,39 @@ export default function ProductCard({ product, variant = "grid" }: Props) {
     } finally {
       setAdding(false)
     }
+  }
+
+  // ✈️ Эффект "полет к корзине"
+  function flyToCart() {
+    const img = imgRef.current
+    if (!img) return
+
+    const cartIcon = document.querySelector(".cart-icon") as HTMLElement
+    if (!cartIcon) return
+
+    const imgRect = img.getBoundingClientRect()
+    const cartRect = cartIcon.getBoundingClientRect()
+
+    const clone = img.cloneNode(true) as HTMLImageElement
+    clone.style.position = "fixed"
+    clone.style.left = imgRect.left + "px"
+    clone.style.top = imgRect.top + "px"
+    clone.style.width = imgRect.width + "px"
+    clone.style.height = imgRect.height + "px"
+    clone.style.transition = "all 0.8s cubic-bezier(0.4,0,0.2,1)"
+    clone.style.zIndex = "9999"
+    clone.style.borderRadius = "12px"
+    document.body.appendChild(clone)
+
+    requestAnimationFrame(() => {
+      clone.style.left = cartRect.left + "px"
+      clone.style.top = cartRect.top + "px"
+      clone.style.width = "30px"
+      clone.style.height = "30px"
+      clone.style.opacity = "0.5"
+    })
+
+    setTimeout(() => clone.remove(), 900)
   }
 
   return (
@@ -115,97 +160,45 @@ export default function ProductCard({ product, variant = "grid" }: Props) {
         </svg>
       </button>
 
-      {variant === "list" ? (
-        <div className="flex items-start gap-4">
-          {/* Фото */}
-          <Link href={`/client/products/${product.id}`} className="shrink-0 w-36 h-24 rounded-lg bg-slate-100 overflow-hidden">
-            <img
-              src={product.image}
-              alt={product.title}
-              className="h-full w-full object-contain"
-            />
-          </Link>
-
-          {/* Инфо */}
-          <div className="flex-1">
-            <div className="text-slate-900 font-bold mb-1">
-              {product.price.toLocaleString("ru-RU")} ₸
-            </div>
-            <Link
-              href={`/client/products/${product.id}`}
-              className="text-sm text-slate-800 hover:text-emerald-600 line-clamp-2 font-medium"
-            >
-              {product.title}
-            </Link>
-            {product.description && (
-              <p className="text-xs text-slate-500 line-clamp-2 mt-1">
-                {product.description}
-              </p>
-            )}
-            <button
-              disabled={adding}
-              onClick={handleAddToCart}
-              className={`mt-3 rounded-full px-4 py-2.5 text-white font-semibold transition inline-flex items-center justify-center gap-2 ${
-                added
-                  ? "bg-emerald-600"
-                  : adding
-                  ? "bg-gray-400"
-                  : "bg-emerald-500 hover:bg-emerald-600"
-              }`}
-            >
-              <ShoppingCart className="size-5" />
-              {added ? "Добавлено!" : adding ? "Добавление..." : "В корзину"}
-            </button>
-          </div>
+      <Link href={`/client/products/${product.id}`}>
+        <div className="aspect-[16/9] rounded-xl bg-slate-100 overflow-hidden mb-3">
+          <img
+            ref={imgRef}
+            src={product.image}
+            alt={product.title}
+            className="h-full w-full object-contain transition-transform hover:scale-105 duration-300"
+          />
         </div>
-      ) : (
-        <>
-          {/* Плитка */}
-          <Link href={`/client/products/${product.id}`}>
-            <div className="aspect-[16/9] rounded-xl bg-slate-100 overflow-hidden mb-3">
-              <img
-                src={product.image}
-                alt={product.title}
-                className="h-full w-full object-contain transition-transform hover:scale-105 duration-300"
-              />
-            </div>
-          </Link>
+      </Link>
 
-          {/* 🧾 Инфо */}
-          <div className="mt-2 space-y-1">
-            <div className="text-slate-900 font-bold text-base">
-              {product.price.toLocaleString("ru-RU")} ₸
-            </div>
-            <Link
-              href={`/client/products/${product.id}`}
-              className="text-sm font-medium text-slate-800 hover:text-emerald-600 line-clamp-2"
-            >
-              {product.title}
-            </Link>
-            {product.description && (
-              <p className="text-xs text-slate-500 line-clamp-2">
-                {product.description}
-              </p>
-            )}
-          </div>
+      {/* 🧾 Инфо */}
+      <div className="mt-2 space-y-1">
+        <div className="text-slate-900 font-bold text-base">
+          {product.price.toLocaleString("ru-RU")} ₸
+        </div>
+        <Link
+          href={`/client/products/${product.id}`}
+          className="text-sm font-medium text-slate-800 hover:text-emerald-600 line-clamp-2"
+        >
+          {product.title}
+        </Link>
+      </div>
 
-          {/* 🛒 Кнопка */}
-          <button
-            disabled={adding}
-            onClick={handleAddToCart}
-            className={`mt-4 w-full rounded-full px-5 py-2.5 text-white font-semibold transition inline-flex items-center justify-center gap-2 ${
-              added
-                ? "bg-emerald-600"
-                : adding
-                ? "bg-gray-400"
-                : "bg-emerald-500 hover:bg-emerald-600"
-            }`}
-          >
-            <ShoppingCart className="size-5" />
-            {added ? "Добавлено!" : adding ? "Добавление..." : "В корзину"}
-          </button>
-        </>
-      )}
+      {/* 🛒 Кнопка */}
+      <button
+        disabled={adding}
+        onClick={handleAddToCart}
+        className={`mt-4 w-full rounded-full px-5 py-2.5 text-white font-semibold transition inline-flex items-center justify-center gap-2 ${
+          added
+            ? "bg-emerald-600"
+            : adding
+            ? "bg-gray-400"
+            : "bg-emerald-500 hover:bg-emerald-600"
+        }`}
+      >
+        <ShoppingCart className="size-5" />
+        {added ? "Добавлено!" : adding ? "Добавление..." : "В корзину"}
+      </button>
     </motion.article>
   )
 }

@@ -3,58 +3,50 @@ import Hero from '@/ui/Hero'
 import ServicesSection from '@/ui/ServicesSection'
 import NewsReels from '@/ui/NewsReels'
 import CatalogView from '@/ui/ProductList'
-import Pagination from "@/ui/Pagination"
-// ⚙️ Количество товаров на страницу
-const PAGE_SIZE = 200
 
-export default async function HomePage({ searchParams }: { searchParams: { page?: string } }) {
+export default async function HomePage() {
   const supabase = await supabaseServer()
 
-  // Текущая страница из URL (по умолчанию 1)
-  const currentPage = parseInt(searchParams.page || '1')
-  const from = (currentPage - 1) * PAGE_SIZE
-  const to = from + PAGE_SIZE - 1
-
-  // 📦 Категории
-  const { data: categories } = await supabase
+  // 📦 Загружаем категории
+  const { data: categories, error: catError } = await supabase
     .from('categories')
     .select('id, name')
     .order('name', { ascending: true })
 
-  // 🛒 Товары с пагинацией
-  const { data: products, error: prodError, count } = await supabase
+  if (catError) {
+    console.error('Ошибка загрузки категорий:', catError.message)
+  }
+
+  // 🛒 Загружаем все товары без пагинации (до 10 000)
+  const { data: products, error: prodError } = await supabase
     .from('products')
-    .select('id, name, price, image_url, category', { count: 'exact' })
-    .range(from, to)
+    .select('id, name, price, image_url, category')
     .order('name', { ascending: true })
+    .limit(10000) // ✅ обязательно добавляем лимит
 
   if (prodError) {
     console.error('Ошибка загрузки товаров:', prodError.message)
   }
 
-  const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1
-
   return (
     <main className="min-h-screen">
+      {/* 🧱 Главный баннер */}
       <Hero />
 
+      {/* 🛍️ Каталог товаров */}
       <section className="container mx-auto px-4 py-10">
         <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-6">
           Каталог товаров
         </h2>
 
         {products && products.length > 0 ? (
-          <>
-            <CatalogView categories={categories || []} allProducts={products} />
-
-            {/* 🔹 Навигация по страницам */}
-            <Pagination totalPages={totalPages} />
-          </>
+          <CatalogView categories={categories || []} allProducts={products} />
         ) : (
           <p className="text-gray-600">Товары пока отсутствуют.</p>
         )}
       </section>
 
+      {/* 💉 Услуги и новости */}
       <ServicesSection />
       <NewsReels />
     </main>
