@@ -2,19 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { normalizePhone } from "@/lib/phone";
 import { ensurePhoneUser, phoneEmail } from "@/lib/phone-auth-user";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { verifyOtp } from "@/lib/otp-store";
 
 export const runtime = "nodejs";
 
 /**
- * Completes phone login for the fallback path (Phone provider disabled).
- * Returns token_hash for supabase.auth.verifyOtp({ type: 'email', token_hash }).
+ * Verifies Mobizon OTP, then issues a Supabase session via magiclink token_hash.
+ * Code is required — no bypass without SMS verification.
  */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const phone = normalizePhone(String(body.phone || ""));
     const fullName = String(body.full_name || "").trim();
-    const mode = String(body.mode || "fallback");
+    const token = String(body.token || body.code || "").trim();
 
     if (!phone) {
       return NextResponse.json(
@@ -22,16 +23,25 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-
-    if (mode === "otp") {
-      return NextResponse.json({
-        ok: true,
-        mode: "otp",
-        message: "Подтверждайте OTP через supabase.auth.verifyOtp на клиенте",
-      });
+    if (!token) {
+      return NextResponse.json(
+        { ok: false, error: "Введите код из SMS" },
+        { status: 400 }
+      );
     }
 
-    const { userId, email } = await ensurePhoneUser(phone, fullName || undefined);
+    const check = verifyOtp(phone, token);
+    if (!check.ok) {
+      return NextResponse.json(
+        { ok: false, error: check.error || "Неверный код" },
+        { status: 401 }
+      );
+    }
+
+    const { userId, email } = await ensurePhoneUser(
+      phone,
+      fullName || undefined
+    );
 
     await supabaseAdmin.from("profiles").upsert(
       {
@@ -55,8 +65,7 @@ export async function POST(req: NextRequest) {
           ok: false,
           error:
             link.error?.message ||
-            "Не удалось выдать сессию. Включите Phone Auth в Supabase Dashboard.",
-          needsDashboard: true,
+            "Код верный, но не удалось создать сессию. Попробуйте ещё раз.",
         },
         { status: 500 }
       );
@@ -64,14 +73,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      mode: "fallback",
+      mode: "mobizon",
       email,
       token_hash: link.data.properties.hashed_token,
       email_otp: link.data.properties.email_otp || null,
       user_id: userId,
-      needsDashboard: true,
-      message:
-        "Сессия без SMS (Phone Auth выключен). Включите Phone + Twilio в Supabase Dashboard.",
+      message: "Телефон подтверждён",
     });
   } catch (err: any) {
     console.error("phone/verify", err?.message || err);

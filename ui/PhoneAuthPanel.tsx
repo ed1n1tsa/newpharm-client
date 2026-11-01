@@ -21,17 +21,17 @@ export default function PhoneAuthPanel({
   const [phone, setPhone] = useState(initialPhone);
   const [fullName, setFullName] = useState(initialName);
   const [step, setStep] = useState<"phone" | "otp">("phone");
-  const [mode, setMode] = useState<"otp" | "fallback">("otp");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
+  const [retryAfter, setRetryAfter] = useState<number | null>(null);
 
-  async function sendCode(e: React.FormEvent) {
-    e.preventDefault();
+  async function requestSms(overridePhone?: string) {
     setError(null);
     setHint(null);
-    const normalized = normalizePhone(phone);
+    setRetryAfter(null);
+    const normalized = normalizePhone(overridePhone ?? phone);
     if (!normalized) {
       setError("Введите номер в формате +7 XXX XXX XX XX");
       return;
@@ -45,29 +45,24 @@ export default function PhoneAuthPanel({
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
+        if (data.retryAfterSec) setRetryAfter(data.retryAfterSec);
         throw new Error(data.error || "Не удалось отправить код");
       }
 
-      setMode(data.mode === "fallback" ? "fallback" : "otp");
       setPhone(normalized);
-
-      if (data.mode === "otp") {
-        const { error: otpErr } = await supabase.auth.signInWithOtp({
-          phone: normalized,
-        });
-        if (otpErr) throw otpErr;
-        setHint(`Код отправлен на ${formatPhoneDisplay(normalized)}`);
-      } else {
-        setHint(
-          "SMS пока недоступен (Phone Auth в Supabase). Можно продолжить без кода — поле OTP уже на экране."
-        );
-      }
+      setHint(`Код отправлен по SMS на ${formatPhoneDisplay(normalized)}`);
       setStep("otp");
+      setCode("");
     } catch (err: any) {
       setError(err?.message || "Ошибка отправки");
     } finally {
       setLoading(false);
     }
+  }
+
+  async function sendCode(e: React.FormEvent) {
+    e.preventDefault();
+    await requestSms();
   }
 
   async function verify(e: React.FormEvent) {
@@ -78,57 +73,42 @@ export default function PhoneAuthPanel({
       setError("Некорректный телефон");
       return;
     }
+    if (!code.trim()) {
+      setError("Введите код из SMS");
+      return;
+    }
     setLoading(true);
     try {
-      if (mode === "otp") {
-        if (!code.trim()) {
-          setError("Введите код из SMS");
-          setLoading(false);
-          return;
-        }
-        const { error: vErr } = await supabase.auth.verifyOtp({
+      const res = await fetch("/api/auth/phone/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           phone: normalized,
+          full_name: fullName,
           token: code.trim(),
-          type: "sms",
-        });
-        if (vErr) throw vErr;
-        if (fullName.trim()) {
-          await supabase.auth.updateUser({
-            data: { full_name: fullName.trim(), phone: normalized },
-          });
-        }
-      } else {
-        const res = await fetch("/api/auth/phone/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            phone: normalized,
-            full_name: fullName,
-            token: code || "000000",
-            mode: "fallback",
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok || !data.ok) {
-          throw new Error(data.error || "Не удалось войти");
-        }
-        let sessErr = (
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Неверный код");
+      }
+
+      let sessErr = (
+        await supabase.auth.verifyOtp({
+          token_hash: data.token_hash,
+          type: "email",
+        })
+      ).error;
+      if (sessErr && data.email_otp && data.email) {
+        sessErr = (
           await supabase.auth.verifyOtp({
-            token_hash: data.token_hash,
+            email: data.email,
+            token: data.email_otp,
             type: "email",
           })
         ).error;
-        if (sessErr && data.email_otp && data.email) {
-          sessErr = (
-            await supabase.auth.verifyOtp({
-              email: data.email,
-              token: data.email_otp,
-              type: "email",
-            })
-          ).error;
-        }
-        if (sessErr) throw sessErr;
       }
+      if (sessErr) throw sessErr;
 
       onAuthenticated({ phone: normalized, fullName: fullName.trim() });
     } catch (err: any) {
@@ -146,7 +126,7 @@ export default function PhoneAuthPanel({
             Контактные данные
           </h2>
           <p className="text-sm text-slate-500 mt-1">
-            Войдите по номеру телефона, чтобы оформить заказ.
+            Войдите по номеру телефона — пришлём SMS с кодом.
           </p>
         </div>
       )}
@@ -154,6 +134,7 @@ export default function PhoneAuthPanel({
       {error && (
         <div className="rounded-xl bg-red-50 text-red-700 px-3 py-2 text-sm">
           {error}
+          {retryAfter ? ` (через ~${retryAfter} сек.)` : null}
         </div>
       )}
       {hint && (
@@ -189,7 +170,7 @@ export default function PhoneAuthPanel({
             disabled={loading}
             className="w-full rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 disabled:opacity-60"
           >
-            {loading ? "Отправляем…" : "Получить код"}
+            {loading ? "Отправляем SMS…" : "Получить код по SMS"}
           </button>
         </form>
       ) : (
@@ -202,6 +183,7 @@ export default function PhoneAuthPanel({
               onClick={() => {
                 setStep("phone");
                 setCode("");
+                setHint(null);
               }}
             >
               изменить
@@ -215,15 +197,14 @@ export default function PhoneAuthPanel({
               inputMode="numeric"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="123456"
+              placeholder="1234"
+              required
+              autoComplete="one-time-code"
               className="w-full rounded-xl border border-slate-200 px-4 py-2.5 outline-none focus:border-emerald-600 tracking-widest"
             />
-            {mode === "fallback" && (
-              <p className="text-xs text-slate-500 mt-1.5">
-                Поле готово к SMS. Пока провайдер не подключён — можно
-                подтвердить номер без кода.
-              </p>
-            )}
+            <p className="text-xs text-slate-500 mt-1.5">
+              Код действует 5 минут. Одноразовый.
+            </p>
           </div>
           {!fullName && (
             <div>
@@ -241,11 +222,15 @@ export default function PhoneAuthPanel({
             disabled={loading}
             className="w-full rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 disabled:opacity-60"
           >
-            {loading
-              ? "Проверяем…"
-              : mode === "fallback"
-                ? "Подтвердить номер"
-                : "Войти и продолжить"}
+            {loading ? "Проверяем…" : "Войти и продолжить"}
+          </button>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => requestSms(phone)}
+            className="w-full text-sm text-emerald-700 hover:underline py-1"
+          >
+            Отправить код ещё раз
           </button>
         </form>
       )}

@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { normalizePhone } from "@/lib/phone";
-import { ensurePhoneUser } from "@/lib/phone-auth-user";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { hasMobizonKey, sendMobizonSms } from "@/lib/mobizon";
+import {
+  checkSendRate,
+  generateOtpCode,
+  markSent,
+  saveOtp,
+  OTP_TTL_SECONDS,
+} from "@/lib/otp-store";
 
 export const runtime = "nodejs";
 
 /**
- * Phone OTP contract for checkout.
- *
- * Primary path (when Phone provider is on): client calls supabase.auth.signInWithOtp.
- * Fallback path: prepares a user so verify can issue a session without SMS.
- *
- * Enable in Supabase Dashboard:
- * Authentication → Providers → Phone → Enable
- * + configure Twilio (SMS provider already set to twilio in project settings).
+ * Sends a real SMS OTP via Mobizon.kz (own code + Message/SendSmsMessage).
+ * Requires MOBIZON_API_KEY in server env. No silent "confirm without SMS" path.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -26,35 +26,58 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const settingsRes = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`,
-      { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! } }
-    );
-    const settings = settingsRes.ok ? await settingsRes.json() : null;
-    const phoneEnabled = Boolean(settings?.external?.phone);
-
-    if (phoneEnabled) {
-      return NextResponse.json({
-        ok: true,
-        mode: "otp",
-        phone,
-        message: "Отправьте OTP через supabase.auth.signInWithOtp",
-      });
+    if (!hasMobizonKey()) {
+      return NextResponse.json(
+        {
+          ok: false,
+          mode: "unavailable",
+          needsMobizonKey: true,
+          error:
+            "SMS не настроен: задайте MOBIZON_API_KEY в .env.local. Получить ключ: mobizon.kz → Панель → Настройки API → включить доступ.",
+        },
+        { status: 503 }
+      );
     }
 
-    const { userId } = await ensurePhoneUser(phone);
-    await supabaseAdmin.from("profiles").upsert(
-      { id: userId, phone, role: "client" },
-      { onConflict: "id" }
-    );
+    const rate = checkSendRate(phone);
+    if (!rate.ok) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: rate.error,
+          retryAfterSec: rate.retryAfterSec,
+        },
+        { status: 429 }
+      );
+    }
+
+    const code = generateOtpCode();
+    const text = `NewPharm: kod ${code}`;
+    const sms = await sendMobizonSms({ phoneE164: phone, text });
+    if (!sms.ok) {
+      console.error("mobizon send failed", sms.code, sms.error);
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            sms.error ||
+            "Не удалось отправить SMS. Проверьте ключ Mobizon и баланс.",
+          mobizonCode: sms.code,
+        },
+        { status: 502 }
+      );
+    }
+
+    saveOtp(phone, code);
+    markSent(phone);
 
     return NextResponse.json({
       ok: true,
-      mode: "fallback",
+      mode: "mobizon",
       phone,
-      needsDashboard: true,
-      message:
-        "Phone Auth в Supabase выключен. SMS не отправляется — подтвердите номер на следующем шаге. Включите Phone + Twilio в Dashboard.",
+      ttlSec: OTP_TTL_SECONDS,
+      messageId: sms.messageId ?? null,
+      message: "Код отправлен по SMS",
     });
   } catch (err: any) {
     console.error("phone/send", err?.message || err);
