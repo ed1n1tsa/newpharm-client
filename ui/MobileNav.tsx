@@ -32,8 +32,8 @@ export default function MobileNav() {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-emerald-50 md:hidden pb-[env(safe-area-inset-bottom)]">
-      <div className="flex justify-around items-center h-16">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-[#eef2f6] md:hidden pb-[env(safe-area-inset-bottom)]">
+      <div className="flex justify-around items-center h-14">
         {navItems.map(({ href, label, icon: Icon }) => {
           const pathOnly = href.split('#')[0] || '/'
           const isActive =
@@ -44,10 +44,18 @@ export default function MobileNav() {
             <Link
               key={label}
               href={href}
-              className="relative flex flex-col items-center text-[11px] text-slate-500 hover:text-emerald-600 transition min-w-[56px]"
+              className="relative flex flex-col items-center gap-0.5 text-[10px] min-w-[56px]"
             >
-              <Icon size={22} className={isActive ? 'text-emerald-600' : 'text-slate-400'} />
-              <span className={isActive ? 'text-emerald-600 font-semibold' : ''}>{label}</span>
+              <span
+                className={`grid place-items-center h-7 w-7 rounded-full ${
+                  isActive ? 'bg-[#e8f8ee] text-[#16a34a]' : 'text-slate-400'
+                }`}
+              >
+                <Icon size={18} />
+              </span>
+              <span className={isActive ? 'text-[#16a34a] font-semibold' : 'text-slate-500'}>
+                {label}
+              </span>
             </Link>
           )
         })}

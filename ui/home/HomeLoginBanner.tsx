@@ -6,20 +6,20 @@ import { User } from 'lucide-react'
 export default function HomeLoginBanner({ loggedIn }: { loggedIn: boolean }) {
   if (loggedIn) return null
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:hidden">
-      <div className="rounded-2xl bg-gradient-to-r from-emerald-50 to-emerald-100/80 px-4 py-3 flex items-center gap-3">
-        <span className="grid place-items-center h-10 w-10 rounded-full bg-white text-emerald-600 shrink-0">
+    <section className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-3">
+      <div className="rounded-[18px] md:rounded-[20px] bg-[#e8f8ee] px-3.5 py-3 md:px-5 md:py-3.5 flex items-center gap-3">
+        <span className="grid place-items-center h-10 w-10 md:h-11 md:w-11 rounded-full bg-white text-[#22c55e] shrink-0 shadow-sm">
           <User size={18} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-slate-900">Войдите в аккаунт</p>
-          <p className="text-xs text-slate-600 line-clamp-2">
+          <p className="text-[14px] md:text-[15px] font-bold text-[#111827]">Войдите в аккаунт</p>
+          <p className="text-[11px] md:text-[12px] text-[#6b7280] line-clamp-2 leading-snug">
             Сохраняйте избранное, отслеживайте заказы и получайте персональные акции
           </p>
         </div>
         <Link
           href="/login"
-          className="shrink-0 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold px-4 py-2"
+          className="shrink-0 rounded-full bg-[#22c55e] hover:bg-[#16a34a] text-white text-[13px] font-semibold px-4 py-2 md:px-5"
         >
           Войти
         </Link>

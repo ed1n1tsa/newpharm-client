@@ -20,12 +20,12 @@ export default function HomePharmacies() {
   const [activeId, setActiveId] = useState<string | null>(null)
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-end justify-between mb-5 gap-3">
-        <h2 className="text-xl md:text-2xl font-bold text-slate-900">
+    <section className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-5">
+      <div className="flex items-end justify-between mb-3 gap-3">
+        <h2 className="text-[18px] md:text-[22px] font-bold text-[#111827]">
           Наши аптеки в {city.name}
         </h2>
-        <Link href="/branches" className="text-sm font-semibold text-emerald-600 shrink-0">
+        <Link href="/branches" className="text-[13px] font-semibold text-[#22c55e] shrink-0">
           Все аптеки →
         </Link>
       </div>

@@ -6,7 +6,7 @@ import type { HomepageCms } from '@/lib/homepage-cms'
 import { DEFAULT_HOMEPAGE_CMS } from '@/lib/homepage-cms'
 import HomeHero from './HomeHero'
 import HomeCategories from './HomeCategories'
-import HomeBanners from './HomeBanners'
+import HomeBanners, { HomeConsultBanner } from './HomeBanners'
 import HomeProducts, { type HomeProduct } from './HomeProducts'
 import HomePharmacies from './HomePharmacies'
 import HomeNewsSection from './HomeNews'
@@ -53,6 +53,7 @@ export default function GuestHome({
         featured={cms.featured || []}
         catalogHref={catalogHref}
       />
+      <HomeConsultBanner banners={cms.banners} />
       <HomePharmacies />
       <HomeNewsSection news={cms.news} />
       <HomeWhy />

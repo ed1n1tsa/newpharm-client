@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Heart, ShoppingCart } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Heart, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/ui/CartContext'
 import type { FeaturedProduct } from '@/lib/homepage-cms'
 
@@ -33,6 +33,7 @@ export default function HomeProducts({
   const { add } = useCart()
   const [tab, setTab] = useState<Tab>('popular')
   const [fav, setFav] = useState<Record<string, boolean>>({})
+  const scroller = useRef<HTMLDivElement>(null)
 
   const list = useMemo(() => {
     const byId = new Map(products.map((p) => [p.id, p]))
@@ -41,9 +42,8 @@ export default function HomeProducts({
       .sort((a, b) => a.sort - b.sort)
       .map((f) => byId.get(f.productId))
       .filter(Boolean) as HomeProduct[]
-
-    if (fromCms.length) return fromCms.slice(0, 10)
-    return products.slice(0, 8)
+    if (fromCms.length) return fromCms.slice(0, 12)
+    return products.slice(0, 10)
   }, [products, featured, tab])
 
   const tabs: { id: Tab; label: string }[] = [
@@ -52,97 +52,115 @@ export default function HomeProducts({
     { id: 'discount', label: 'Со скидкой' },
   ]
 
+  function scrollBy(dir: number) {
+    const el = scroller.current
+    if (!el) return
+    el.scrollBy({ left: dir * Math.max(280, el.clientWidth * 0.75), behavior: 'smooth' })
+  }
+
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4 mb-5">
-        <h2 className="text-[1.35rem] md:text-[1.65rem] font-bold text-[#0f172a]">
-          Популярные товары
-        </h2>
-        <div className="flex flex-wrap items-center gap-2 lg:ml-auto">
+    <section className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-5 relative">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
+        <h2 className="text-[18px] md:text-[22px] font-bold text-[#111827]">Популярные товары</h2>
+        <div className="flex flex-wrap items-center gap-1.5 sm:ml-auto">
           {tabs.map((t) => (
             <button
               key={t.id}
               type="button"
               onClick={() => setTab(t.id)}
-              className={`rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${
+              className={`rounded-full px-3 py-1 text-[12px] font-semibold transition ${
                 tab === t.id
                   ? 'bg-[#22c55e] text-white'
-                  : 'bg-[#f1f5f9] text-[#64748b] hover:bg-[#e8f8ee] hover:text-[#166534]'
+                  : 'bg-[#f3f4f6] text-[#6b7280]'
               }`}
             >
               {t.label}
             </button>
           ))}
-          <Link href={catalogHref} className="text-sm font-semibold text-[#22c55e] ml-1">
+          <Link href={catalogHref} className="text-[13px] font-semibold text-[#22c55e] ml-1">
             Все товары →
           </Link>
         </div>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-        {list.map((p) => {
-          const volume = p.volume || extractVolume(p.name)
-          return (
-            <article
-              key={p.id}
-              className="shrink-0 w-[168px] sm:w-[190px] rounded-[22px] bg-white p-3 ring-1 ring-[#eef2f6] shadow-[0_1px_2px_rgba(15,23,42,0.03)] hover:shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition relative"
-            >
-              <button
-                type="button"
-                aria-label="В избранное"
-                onClick={() => setFav((s) => ({ ...s, [p.id]: !s[p.id] }))}
-                className="absolute right-3 top-3 z-[1] rounded-full bg-white/90 p-1.5 text-slate-400 hover:text-rose-500"
+      <div className="relative">
+        <button
+          type="button"
+          aria-label="Назад"
+          onClick={() => scrollBy(-1)}
+          className="hidden md:grid absolute -left-3 top-1/2 -translate-y-1/2 z-10 place-items-center h-9 w-9 rounded-full bg-white shadow ring-1 ring-[#e5e7eb] text-slate-600"
+        >
+          <ChevronLeft size={18} />
+        </button>
+        <button
+          type="button"
+          aria-label="Вперёд"
+          onClick={() => scrollBy(1)}
+          className="hidden md:grid absolute -right-3 top-1/2 -translate-y-1/2 z-10 place-items-center h-9 w-9 rounded-full bg-white shadow ring-1 ring-[#e5e7eb] text-slate-600"
+        >
+          <ChevronRight size={18} />
+        </button>
+
+        <div
+          ref={scroller}
+          className="flex gap-2.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-1"
+        >
+          {list.map((p) => {
+            const volume = p.volume || extractVolume(p.name)
+            return (
+              <article
+                key={p.id}
+                className="snap-start shrink-0 w-[calc(50%-5px)] sm:w-[160px] md:w-[168px] rounded-[18px] bg-white p-2.5 ring-1 ring-[#eef2f6] shadow-[0_1px_3px_rgba(15,23,42,0.04)] relative"
               >
-                <Heart
-                  size={16}
-                  className={fav[p.id] ? 'fill-rose-500 text-rose-500' : ''}
-                />
-              </button>
-              <Link href={`/ProductPage?id=${p.id}`} className="block">
-                <div className="aspect-square rounded-2xl bg-[#f8fafc] grid place-items-center overflow-hidden mb-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={p.image_url || '/fallback-image.png'}
-                    alt={p.name}
-                    className="max-h-[85%] max-w-[85%] object-contain"
-                  />
-                </div>
-                <h3 className="text-[13px] font-semibold text-[#0f172a] line-clamp-2 min-h-[2.4rem] leading-snug">
-                  {p.name}
-                </h3>
-                {volume && <p className="mt-1 text-xs text-[#94a3b8]">{volume}</p>}
-              </Link>
-              <div className="mt-3 flex items-center justify-between gap-2">
-                <span className="font-bold text-[#0f172a] text-[15px]">
-                  {Number(p.price || 0).toLocaleString('ru-RU')} ₸
-                </span>
                 <button
                   type="button"
-                  aria-label="В корзину"
-                  onClick={() =>
-                    add(
-                      {
-                        id: p.id,
-                        name: p.name,
-                        price: Number(p.price) || 0,
-                        image_url: p.image_url,
-                      },
-                      1
-                    )
-                  }
-                  className="grid place-items-center h-9 w-9 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white transition"
+                  aria-label="В избранное"
+                  onClick={() => setFav((s) => ({ ...s, [p.id]: !s[p.id] }))}
+                  className="absolute right-2.5 top-2.5 z-[1] text-slate-300 hover:text-rose-500"
                 >
-                  <ShoppingCart size={15} />
+                  <Heart size={15} className={fav[p.id] ? 'fill-rose-500 text-rose-500' : ''} />
                 </button>
-              </div>
-            </article>
-          )
-        })}
-        {!list.length && (
-          <p className="text-slate-500 text-sm py-8">
-            Товары скоро появятся — добавьте их в админке.
-          </p>
-        )}
+                <Link href={`/ProductPage?id=${p.id}`} className="block">
+                  <div className="aspect-square rounded-xl bg-[#f9fafb] grid place-items-center overflow-hidden mb-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={p.image_url || '/fallback-image.png'}
+                      alt={p.name}
+                      className="max-h-[90%] max-w-[90%] object-contain"
+                    />
+                  </div>
+                  <h3 className="text-[12px] font-semibold text-[#111827] line-clamp-2 min-h-[2.2rem] leading-snug">
+                    {p.name}
+                  </h3>
+                  {volume && <p className="mt-0.5 text-[11px] text-[#9ca3af]">{volume}</p>}
+                </Link>
+                <div className="mt-2 flex items-center justify-between gap-1">
+                  <span className="font-bold text-[#111827] text-[13px]">
+                    {Number(p.price || 0).toLocaleString('ru-RU')} ₸
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="В корзину"
+                    onClick={() =>
+                      add(
+                        {
+                          id: p.id,
+                          name: p.name,
+                          price: Number(p.price) || 0,
+                          image_url: p.image_url,
+                        },
+                        1
+                      )
+                    }
+                    className="grid place-items-center h-8 w-8 rounded-[10px] bg-[#22c55e] text-white"
+                  >
+                    <ShoppingCart size={14} />
+                  </button>
+                </div>
+              </article>
+            )
+          })}
+        </div>
       </div>
     </section>
   )

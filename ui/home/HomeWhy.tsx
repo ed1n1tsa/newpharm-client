@@ -29,22 +29,33 @@ const ITEMS = [
 export default function HomeWhy() {
   const { city } = useCity()
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <h2 className="text-xl md:text-2xl font-bold text-slate-900 text-center mb-8">
-        Почему выбирают NewPharm
-      </h2>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {ITEMS.map((item) => (
-          <div key={item.title} className="text-center px-2">
-            <span className="mx-auto mb-3 grid place-items-center h-14 w-14 rounded-2xl bg-emerald-50">
-              <HomeIcon src={item.icon} alt="" size={32} />
-            </span>
-            <h3 className="font-bold text-slate-900">{item.title}</h3>
-            <p className="mt-1 text-sm text-slate-500">
-              {typeof item.text === 'function' ? item.text(city.name) : item.text}
-            </p>
+    <section className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
+      <div className="rounded-[22px] bg-[#e8f8ee] px-4 py-5 md:px-6 md:py-6">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
+          <h2 className="text-[18px] md:text-[22px] font-bold text-[#111827] lg:w-[220px] shrink-0">
+            Почему выбирают NewPharm
+          </h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-0 flex-1">
+            {ITEMS.map((item, i) => (
+              <div
+                key={item.title}
+                className={`flex items-start gap-2.5 lg:px-4 ${
+                  i > 0 ? 'lg:border-l lg:border-[#c6e9d3]' : ''
+                }`}
+              >
+                <span className="grid place-items-center h-9 w-9 shrink-0">
+                  <HomeIcon src={item.icon} alt="" size={28} />
+                </span>
+                <div className="min-w-0">
+                  <h3 className="text-[13px] md:text-[14px] font-bold text-[#111827]">{item.title}</h3>
+                  <p className="mt-0.5 text-[11px] md:text-[12px] text-[#6b7280] leading-snug">
+                    {typeof item.text === 'function' ? item.text(city.name) : item.text}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </section>
   )

@@ -22,7 +22,7 @@ const USPS = [
   {
     icon: '/home/icon-card.png',
     title: 'Удобная оплата',
-    text: 'WhatsApp или при получении',
+    text: 'Онлайн или при получении',
   },
   {
     icon: '/home/icon-headset.png',
@@ -50,64 +50,52 @@ export default function HomeHero({ catalogHref }: { catalogHref: string }) {
   }
 
   return (
-    <section className="relative overflow-hidden bg-[#f7fbf8]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 md:pt-12 pb-6 md:pb-10">
-        {/* Hero row: text left, art right */}
-        <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-6 lg:gap-10 items-center">
-          <div>
-            <div className="flex gap-3 items-start lg:block">
-              <div className="min-w-0 flex-1">
-                <h1 className="text-[1.65rem] sm:text-[2.35rem] lg:text-[2.75rem] font-extrabold text-[#0f172a] leading-[1.15] tracking-[-0.02em]">
-                  Лекарства, товары для здоровья в одном месте
-                </h1>
-                <p className="mt-3 text-[#64748b] text-sm sm:text-base lg:text-lg max-w-xl leading-relaxed">
-                  Найдите нужные лекарства, забронируйте в аптеке и получите консультацию врача
-                </p>
-              </div>
-              <div className="relative w-[38%] max-w-[150px] shrink-0 lg:hidden">
-                <div className="absolute inset-[-10%] rounded-full bg-[#86efac]/45 blur-2xl" />
-                <Image
-                  src="/home/hero-bottles.png"
-                  alt=""
-                  width={200}
-                  height={200}
-                  priority
-                  className="relative z-[1] w-full h-auto object-contain"
-                  unoptimized
-                />
-              </div>
-            </div>
+    <section className="relative overflow-hidden bg-white">
+      <div className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 md:pt-7 pb-3 md:pb-5">
+        {/* ===== Hero ===== */}
+        <div className="grid grid-cols-[1fr_auto] lg:grid-cols-[1fr_1fr] gap-3 lg:gap-8 items-center">
+          {/* Copy */}
+          <div className="min-w-0">
+            <h1 className="text-[22px] leading-[1.2] sm:text-[28px] lg:text-[34px] lg:leading-[1.18] font-extrabold text-[#111827] tracking-[-0.02em] max-w-[18ch] lg:max-w-[16ch]">
+              Лекарства, товары для здоровья в одном месте
+            </h1>
+            <p className="mt-2 lg:mt-2.5 text-[13px] lg:text-[15px] text-[#6b7280] leading-snug max-w-[36ch] hidden sm:block">
+              Найдите нужные лекарства, забронируйте в аптеке и получите консультацию врача
+            </p>
 
+            {/* Search — under title on all breakpoints */}
             <form
               onSubmit={onSubmit}
-              className="mt-6 flex items-center rounded-[18px] bg-white border border-[#e8eef0] shadow-[0_8px_30px_rgba(15,23,42,0.04)] overflow-hidden"
+              className="mt-3 lg:mt-4 flex items-center rounded-full bg-white border border-[#e5e7eb] shadow-[0_4px_18px_rgba(17,24,39,0.05)] overflow-hidden max-w-xl"
               role="search"
             >
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Поиск лекарств, товаров, заболеваний…"
-                className="flex-1 px-5 py-3.5 text-[15px] text-slate-800 placeholder:text-slate-400 outline-none min-w-0 bg-transparent"
+                className="flex-1 px-4 lg:px-5 py-2.5 lg:py-3 text-[13px] lg:text-[14px] text-slate-800 placeholder:text-slate-400 outline-none min-w-0 bg-transparent"
               />
               <button
                 type="submit"
-                className="shrink-0 m-1.5 rounded-2xl bg-[#22c55e] hover:bg-[#16a34a] text-white px-6 py-2.5 text-sm font-semibold transition"
+                className="shrink-0 m-1 rounded-full bg-[#22c55e] hover:bg-[#16a34a] text-white px-4 lg:px-5 py-2 text-[13px] font-semibold transition"
               >
                 Найти
               </button>
             </form>
 
-            <div className="mt-3.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-sm">
-              <span className="inline-flex items-center gap-1 text-slate-500">
-                <Flame size={14} className="text-orange-500" />
+            <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[12px] lg:text-[13px]">
+              <span className="inline-flex items-center gap-1 text-[#9ca3af] mr-0.5">
+                <Flame size={12} className="text-orange-500" />
                 Популярное:
               </span>
-              {POPULAR.map((term) => (
+              {POPULAR.map((term, i) => (
                 <button
                   key={term}
                   type="button"
                   onClick={() => goSearch(term)}
-                  className="text-slate-700 hover:text-emerald-600 transition"
+                  className={`rounded-full bg-[#f3f4f6] hover:bg-[#e8f8ee] text-[#374151] px-2.5 py-1 transition ${
+                    i >= 3 ? 'hidden sm:inline-flex' : 'inline-flex'
+                  }`}
                 >
                   {term}
                 </button>
@@ -115,31 +103,55 @@ export default function HomeHero({ catalogHref }: { catalogHref: string }) {
             </div>
           </div>
 
-          <div className="relative hidden lg:flex items-center justify-center min-h-[360px]">
-            <div className="absolute w-[78%] aspect-square rounded-full bg-[radial-gradient(circle_at_center,#bbf7d0_0%,#dcfce7_42%,transparent_72%)]" />
+          {/* Illustration — large, with soft green blob */}
+          <div className="relative w-[148px] sm:w-[200px] lg:w-full lg:max-w-[480px] lg:justify-self-end aspect-square flex items-center justify-center -mr-1">
+            <div
+              aria-hidden
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[125%] h-[125%] rounded-[42%] bg-[radial-gradient(ellipse_at_center,#c6f0d4_0%,#e8f8ee_45%,transparent_72%)]"
+            />
+            <div
+              aria-hidden
+              className="absolute left-[4%] top-[14%] w-[84%] h-[74%] rounded-[48%_42%_55%_40%] bg-[#b8ebc8]/60 blur-[1px]"
+            />
             <Image
               src="/home/hero-bottles.png"
               alt="Лекарства NewPharm"
               width={560}
               height={560}
               priority
-              className="relative z-[1] w-[88%] max-w-[420px] h-auto object-contain drop-shadow-[0_20px_40px_rgba(22,163,74,0.18)]"
+              className="relative z-[1] w-[115%] max-w-none h-auto object-contain drop-shadow-[0_12px_28px_rgba(22,163,74,0.16)] scale-[1.15] lg:scale-[1.28] origin-center"
               unoptimized
             />
           </div>
         </div>
 
-        {/* USP — flat, no heavy cards (as in mock) */}
-        <div className="mt-10 md:mt-12 grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6">
+        {/* ===== USP ===== */}
+        {/* Desktop: flat row with captions */}
+        <div className="mt-6 lg:mt-8 hidden md:grid grid-cols-4 gap-6 lg:gap-8">
           {USPS.map((u) => (
-            <div key={u.title} className="flex items-start gap-3">
-              <span className="mt-0.5 grid place-items-center h-11 w-11 shrink-0">
-                <HomeIcon src={u.icon} alt="" size={36} />
+            <div key={u.title} className="flex items-start gap-2.5">
+              <span className="grid place-items-center h-9 w-9 shrink-0">
+                <HomeIcon src={u.icon} alt="" size={32} />
               </span>
-              <div className="min-w-0 pt-0.5">
-                <p className="text-[15px] font-bold text-[#0f172a] leading-snug">{u.title}</p>
-                <p className="mt-0.5 text-sm text-[#94a3b8] leading-snug">{u.text}</p>
+              <div className="min-w-0">
+                <p className="text-[14px] font-bold text-[#111827] leading-tight">{u.title}</p>
+                <p className="mt-0.5 text-[12px] text-[#9ca3af] leading-snug">{u.text}</p>
               </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Mobile: 4 compact white cards in one row */}
+        <div className="mt-4 grid grid-cols-4 gap-1.5 md:hidden">
+          {USPS.map((u) => (
+            <div
+              key={u.title}
+              className="rounded-[14px] bg-white ring-1 ring-[#eef2f6] shadow-[0_2px_8px_rgba(15,23,42,0.04)] px-1 py-2.5 flex flex-col items-center text-center gap-1.5"
+            >
+              <HomeIcon src={u.icon} alt="" size={26} />
+              <p className="text-[10px] font-semibold text-[#111827] leading-tight px-0.5">
+                {u.title}
+              </p>
             </div>
           ))}
         </div>

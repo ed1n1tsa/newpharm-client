@@ -39,6 +39,8 @@ export default function Header() {
   }, [])
 
   const catalogHref = loggedIn || isClientArea ? '/client/products' : '/catalog'
+  const authHref = loggedIn ? '/client/profile' : '/login'
+  const authLabel = loggedIn ? 'Профиль' : 'Войти'
 
   function onSearch(e: FormEvent) {
     e.preventDefault()
@@ -61,41 +63,42 @@ export default function Header() {
   }
 
   return (
-    <header className="w-full bg-white/95 backdrop-blur sticky top-0 z-50 border-b border-emerald-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="h-16 flex items-center gap-3 md:gap-5">
+    <header className="w-full bg-white sticky top-0 z-50 border-b border-[#f0f2f5]">
+      <div className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="h-12 md:h-14 flex items-center gap-2 md:gap-4 relative">
           <button
             type="button"
-            className="lg:hidden p-2 -ml-2 text-slate-700"
+            className="lg:hidden p-1.5 -ml-1 text-slate-700 z-10"
             aria-label="Меню"
             onClick={() => setMenuOpen(true)}
           >
-            <Menu size={22} />
+            <Menu size={20} />
           </button>
 
-          <Link href="/" className="flex items-center gap-2 shrink-0">
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 shrink-0 absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0"
+          >
             <Image
               src="/logo.png"
               alt="NewPharm"
-              width={40}
-              height={40}
+              width={32}
+              height={32}
               className="object-contain"
               priority
             />
-            <span className="text-base font-bold text-[#0f172a] tracking-tight">
-              NewPharm
-            </span>
+            <span className="text-[15px] font-bold text-[#111827] tracking-tight">NewPharm</span>
           </Link>
 
           <div className="relative hidden sm:block">
             <button
               type="button"
               onClick={() => setCityOpen((v) => !v)}
-              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm text-slate-700 hover:bg-emerald-50"
+              className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[13px] text-slate-700 hover:bg-emerald-50"
             >
-              <MapPin size={14} className="text-emerald-600" />
+              <MapPin size={13} className="text-emerald-600" />
               <span>{city.name}</span>
-              <ChevronDown size={14} className="text-slate-400" />
+              <ChevronDown size={13} className="text-slate-400" />
             </button>
             {cityOpen && (
               <>
@@ -105,12 +108,12 @@ export default function Header() {
                   aria-label="Закрыть"
                   onClick={() => setCityOpen(false)}
                 />
-                <ul className="absolute left-0 top-full mt-2 z-50 min-w-[160px] rounded-2xl border border-slate-100 bg-white py-2 shadow-lg">
+                <ul className="absolute left-0 top-full mt-1.5 z-50 min-w-[150px] rounded-xl border border-slate-100 bg-white py-1.5 shadow-lg">
                   {cities.map((c) => (
                     <li key={c.id}>
                       <button
                         type="button"
-                        className={`w-full px-4 py-2 text-left text-sm hover:bg-emerald-50 ${
+                        className={`w-full px-3 py-1.5 text-left text-[13px] hover:bg-emerald-50 ${
                           c.id === city.id ? 'text-emerald-700 font-semibold' : 'text-slate-700'
                         }`}
                         onClick={() => {
@@ -127,7 +130,7 @@ export default function Header() {
             )}
           </div>
 
-          <nav className="hidden lg:flex items-center gap-1 text-sm font-medium text-slate-700 ml-2">
+          <nav className="hidden lg:flex items-center gap-0.5 text-[13px] font-medium text-slate-700 ml-1">
             {NAV.map((item) => {
               const href = navHref(item.href)
               const active =
@@ -138,9 +141,9 @@ export default function Header() {
                 <Link
                   key={item.label}
                   href={href}
-                  className={`px-3 py-1.5 rounded-full transition ${
+                  className={`px-2.5 py-1 rounded-full transition ${
                     active
-                      ? 'bg-emerald-100 text-emerald-800'
+                      ? 'bg-[#e8f8ee] text-[#166534]'
                       : 'hover:bg-emerald-50 hover:text-emerald-700'
                   }`}
                 >
@@ -150,62 +153,61 @@ export default function Header() {
             })}
           </nav>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 ml-auto text-slate-700">
+          <div className="flex items-center gap-0.5 ml-auto text-slate-700">
             <button
               type="button"
-              className="p-2 rounded-full hover:bg-emerald-50"
+              className="p-1.5 rounded-full hover:bg-emerald-50"
               aria-label="Поиск"
               onClick={() => setSearchOpen((v) => !v)}
             >
-              <Search size={18} />
+              <Search size={17} />
             </button>
             <Link
-              href={loggedIn ? '/client/profile' : '/login'}
-              className="p-2 rounded-full hover:bg-emerald-50 hidden sm:inline-flex"
+              href={authHref}
+              className="p-1.5 rounded-full hover:bg-emerald-50"
               aria-label="Избранное"
             >
-              <Heart size={18} />
+              <Heart size={17} />
             </Link>
             <Link
               href="/cart"
-              className="cart-icon relative p-2 rounded-full hover:bg-emerald-50"
+              className="cart-icon relative p-1.5 rounded-full hover:bg-emerald-50"
               aria-label="Корзина"
             >
-              <ShoppingCart size={18} />
+              <ShoppingCart size={17} />
               {count > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center">
                   {count > 99 ? '99+' : count}
                 </span>
               )}
             </Link>
             <Link
-              href={loggedIn ? '/client/profile' : '/login'}
-              className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-emerald-100 px-3 py-1.5 text-sm hover:border-emerald-300 hover:text-emerald-700"
+              href={authHref}
+              className="hidden md:inline-flex items-center gap-1 ml-1 rounded-full px-2.5 py-1 text-[13px] hover:bg-emerald-50"
             >
-              <User size={16} />
-              {loggedIn ? 'Профиль' : 'Войти'}
+              <User size={15} />
+              {authLabel}
             </Link>
           </div>
         </div>
 
-        {/* mobile city chip */}
-        <div className="sm:hidden pb-3">
+        <div className="sm:hidden pb-2.5">
           <button
             type="button"
             onClick={() => setCityOpen((v) => !v)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 px-3 py-1 text-sm text-emerald-800"
+            className="inline-flex items-center gap-1 rounded-full border border-[#d1fae5] px-2.5 py-1 text-[12px] text-[#166534]"
           >
-            <MapPin size={14} className="text-emerald-600" />
+            <MapPin size={12} className="text-emerald-600" />
             {city.name}
-            <ChevronDown size={14} />
+            <ChevronDown size={12} />
           </button>
           {cityOpen && (
-            <ul className="mt-2 rounded-2xl border border-slate-100 bg-white py-2 shadow-md">
+            <ul className="mt-1.5 rounded-xl border border-slate-100 bg-white py-1.5 shadow-md">
               {cities.map((c) => (
                 <li key={c.id}>
                   <button
                     type="button"
-                    className="w-full px-4 py-2 text-left text-sm"
+                    className="w-full px-3 py-1.5 text-left text-[13px]"
                     onClick={() => {
                       setCityId(c.id)
                       setCityOpen(false)
@@ -220,18 +222,18 @@ export default function Header() {
         </div>
 
         {searchOpen && (
-          <form onSubmit={onSearch} className="pb-3" role="search">
+          <form onSubmit={onSearch} className="pb-2.5" role="search">
             <div className="flex gap-2">
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 autoFocus
                 placeholder="Поиск лекарств, товаров, заболеваний…"
-                className="flex-1 rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-emerald-500 focus:bg-white"
+                className="flex-1 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-[13px] outline-none focus:border-emerald-500 focus:bg-white"
               />
               <button
                 type="submit"
-                className="rounded-full bg-emerald-500 hover:bg-emerald-600 text-white px-5 text-sm font-semibold"
+                className="rounded-full bg-emerald-500 hover:bg-emerald-600 text-white px-4 text-[13px] font-semibold"
               >
                 Найти
               </button>
@@ -248,11 +250,11 @@ export default function Header() {
             aria-label="Закрыть меню"
             onClick={() => setMenuOpen(false)}
           />
-          <div className="absolute left-0 top-0 h-full w-[80%] max-w-xs bg-white shadow-xl p-5 flex flex-col gap-2">
-            <div className="flex items-center justify-between mb-4">
-              <span className="font-bold text-emerald-600">Меню</span>
+          <div className="absolute left-0 top-0 h-full w-[80%] max-w-xs bg-white shadow-xl p-4 flex flex-col gap-1">
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-bold text-[#166534]">Меню</span>
               <button type="button" onClick={() => setMenuOpen(false)} aria-label="Закрыть">
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
             {NAV.map((item) => (
@@ -260,17 +262,17 @@ export default function Header() {
                 key={item.label}
                 href={navHref(item.href)}
                 onClick={() => setMenuOpen(false)}
-                className="rounded-xl px-3 py-3 text-slate-800 hover:bg-emerald-50"
+                className="rounded-xl px-3 py-2.5 text-[14px] text-slate-800 hover:bg-emerald-50"
               >
                 {item.label}
               </Link>
             ))}
             <Link
-              href={loggedIn ? '/client/profile' : '/login'}
+              href={authHref}
               onClick={() => setMenuOpen(false)}
-              className="mt-auto rounded-xl bg-emerald-500 text-white text-center py-3 font-semibold"
+              className="mt-auto rounded-xl bg-emerald-500 text-white text-center py-2.5 font-semibold text-[14px]"
             >
-              {loggedIn ? 'Профиль' : 'Войти'}
+              {authLabel}
             </Link>
           </div>
         </div>
