@@ -7,14 +7,19 @@ import { normalizePhone, formatPhoneDisplay } from "@/lib/phone";
 type Props = {
   onAuthenticated: (info: { phone: string; fullName: string }) => void;
   initialPhone?: string;
+  initialName?: string;
+  /** Embedded inside checkout step — no outer card chrome */
+  embedded?: boolean;
 };
 
 export default function PhoneAuthPanel({
   onAuthenticated,
   initialPhone = "",
+  initialName = "",
+  embedded = false,
 }: Props) {
   const [phone, setPhone] = useState(initialPhone);
-  const [fullName, setFullName] = useState("");
+  const [fullName, setFullName] = useState(initialName);
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [mode, setMode] = useState<"otp" | "fallback">("otp");
   const [code, setCode] = useState("");
@@ -54,8 +59,7 @@ export default function PhoneAuthPanel({
         setHint(`Код отправлен на ${formatPhoneDisplay(normalized)}`);
       } else {
         setHint(
-          data.message ||
-            "SMS временно недоступен — подтвердите номер без кода. Включите Phone Auth в Supabase для OTP."
+          "SMS пока недоступен (Phone Auth в Supabase). Можно продолжить без кода — поле OTP уже на экране."
         );
       }
       setStep("otp");
@@ -134,24 +138,26 @@ export default function PhoneAuthPanel({
     }
   }
 
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold text-slate-900">
-          Вход по телефону
-        </h2>
-        <p className="text-sm text-slate-500 mt-1">
-          Для оформления заказа войдите или зарегистрируйтесь по номеру телефона.
-        </p>
-      </div>
+  const body = (
+    <div className="space-y-4">
+      {!embedded && (
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900">
+            Контактные данные
+          </h2>
+          <p className="text-sm text-slate-500 mt-1">
+            Войдите по номеру телефона, чтобы оформить заказ.
+          </p>
+        </div>
+      )}
 
       {error && (
-        <div className="rounded-lg bg-red-50 text-red-700 px-3 py-2 text-sm">
+        <div className="rounded-xl bg-red-50 text-red-700 px-3 py-2 text-sm">
           {error}
         </div>
       )}
       {hint && (
-        <div className="rounded-lg bg-amber-50 text-amber-800 px-3 py-2 text-sm">
+        <div className="rounded-xl bg-emerald-50/80 text-emerald-900 px-3 py-2 text-sm">
           {hint}
         </div>
       )}
@@ -164,7 +170,7 @@ export default function PhoneAuthPanel({
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Как к вам обращаться"
-              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 outline-none focus:border-emerald-500"
+              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 outline-none focus:border-emerald-600"
             />
           </div>
           <div>
@@ -175,13 +181,13 @@ export default function PhoneAuthPanel({
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+7 7XX XXX XX XX"
               required
-              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 outline-none focus:border-emerald-500"
+              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 outline-none focus:border-emerald-600"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 disabled:opacity-60"
+            className="w-full rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 disabled:opacity-60"
           >
             {loading ? "Отправляем…" : "Получить код"}
           </button>
@@ -192,7 +198,7 @@ export default function PhoneAuthPanel({
             Номер: <strong>{formatPhoneDisplay(phone)}</strong>{" "}
             <button
               type="button"
-              className="text-emerald-600 underline"
+              className="text-emerald-700 underline"
               onClick={() => {
                 setStep("phone");
                 setCode("");
@@ -201,30 +207,39 @@ export default function PhoneAuthPanel({
               изменить
             </button>
           </p>
-          {mode === "otp" && (
+          <div>
+            <label className="block text-sm text-slate-600 mb-1">
+              Код из SMS
+            </label>
+            <input
+              inputMode="numeric"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="123456"
+              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 outline-none focus:border-emerald-600 tracking-widest"
+            />
+            {mode === "fallback" && (
+              <p className="text-xs text-slate-500 mt-1.5">
+                Поле готово к SMS. Пока провайдер не подключён — можно
+                подтвердить номер без кода.
+              </p>
+            )}
+          </div>
+          {!fullName && (
             <div>
-              <label className="block text-sm text-slate-600 mb-1">
-                Код из SMS
-              </label>
+              <label className="block text-sm text-slate-600 mb-1">Имя</label>
               <input
-                inputMode="numeric"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="123456"
-                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 outline-none focus:border-emerald-500 tracking-widest"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Как к вам обращаться"
+                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 outline-none focus:border-emerald-600"
               />
             </div>
-          )}
-          {mode === "fallback" && (
-            <p className="text-sm text-slate-500">
-              SMS-провайдер ещё не подключён. Нажмите «Подтвердить номер», чтобы
-              продолжить оформление.
-            </p>
           )}
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 disabled:opacity-60"
+            className="w-full rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 disabled:opacity-60"
           >
             {loading
               ? "Проверяем…"
@@ -234,6 +249,13 @@ export default function PhoneAuthPanel({
           </button>
         </form>
       )}
+    </div>
+  );
+
+  if (embedded) return body;
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      {body}
     </div>
   );
 }

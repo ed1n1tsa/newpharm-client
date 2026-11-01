@@ -15,6 +15,11 @@ export default function LayoutContent({
   // отключаем общий layout для админки и клиентской зоны
   const isAdmin = pathname?.startsWith("/admin");
   const isClient = pathname?.startsWith("/client");
+  // Checkout/cart use their own sticky CTAs — hide bottom nav there
+  const hideMobileNav =
+    pathname === "/cart" ||
+    pathname === "/checkout" ||
+    pathname?.startsWith("/checkout");
 
   return (
     <div className="bg-background text-text min-h-screen flex flex-col">
@@ -23,7 +28,7 @@ export default function LayoutContent({
 
       <main className="flex-grow">{children}</main>
 
-      {!isAdmin && !isClient && <MobileNav />}
+      {!isAdmin && !isClient && !hideMobileNav && <MobileNav />}
       {!isAdmin && !isClient && <Footer />}
     </div>
   );
