@@ -82,7 +82,7 @@ export default function Header() {
               className="object-contain"
               priority
             />
-            <span className="text-base font-bold text-emerald-600 tracking-tight">
+            <span className="text-base font-bold text-[#0f172a] tracking-tight">
               NewPharm
             </span>
           </Link>
@@ -91,7 +91,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setCityOpen((v) => !v)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50/60 px-3 py-1.5 text-sm text-slate-700 hover:border-emerald-300"
+              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm text-slate-700 hover:bg-emerald-50"
             >
               <MapPin size={14} className="text-emerald-600" />
               <span>{city.name}</span>

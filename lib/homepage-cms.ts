@@ -42,7 +42,7 @@ export const DEFAULT_HOMEPAGE_CMS: HomepageCms = {
       title: 'Витамин D3 со скидкой до -20%',
       subtitle: 'Акция',
       href: '/catalog?q=витамин%20D3',
-      image: '/home/banner-d3.jpg',
+      image: '/home/banner-d3.png',
       cta: 'Подробнее',
       active: true,
       sort: 0,

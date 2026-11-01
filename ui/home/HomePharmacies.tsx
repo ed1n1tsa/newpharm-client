@@ -31,8 +31,20 @@ export default function HomePharmacies() {
       </div>
 
       {!list.length ? (
-        <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-slate-600">
-          В городе {city.name} аптеки NewPharm пока не отмечены. Выберите Атырау или посмотрите филиалы.
+        <div className="rounded-[28px] bg-[#f8fafc] ring-1 ring-[#eef2f6] p-8 md:p-10 flex flex-col items-center text-center gap-3">
+          <span className="grid place-items-center h-12 w-12 rounded-full bg-[#e8f8ee] text-emerald-600">
+            <MapPin size={22} />
+          </span>
+          <p className="text-[#0f172a] font-semibold">Пока нет аптек в городе {city.name}</p>
+          <p className="text-sm text-[#64748b] max-w-md">
+            Выберите Атырау в шапке — там уже отмечены филиалы на карте — или откройте список филиалов.
+          </p>
+          <Link
+            href="/branches"
+            className="mt-1 inline-flex rounded-full bg-[#22c55e] text-white text-sm font-semibold px-4 py-2"
+          >
+            Все филиалы
+          </Link>
         </div>
       ) : (
         <div className="grid lg:grid-cols-2 gap-4">
