@@ -18,9 +18,17 @@ type Product = {
 
 type Category = { id: string; name: string }
 
-export default function ProductList({ categories, allProducts }: { categories: Category[]; allProducts: Product[] }) {
+export default function ProductList({
+  categories,
+  allProducts,
+  initialSearch = "",
+}: {
+  categories: Category[]
+  allProducts: Product[]
+  initialSearch?: string
+}) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState(initialSearch)
   const [filterOpen, setFilterOpen] = useState(false)
   const [sort, setSort] = useState("popular")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
