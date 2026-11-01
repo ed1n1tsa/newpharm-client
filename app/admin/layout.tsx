@@ -27,6 +27,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const nav = [
     { href: '/admin', label: 'Обзор', icon: LayoutDashboard },
+    { href: '/admin/homepage', label: 'Главная (контент)', icon: FileText },
     { href: '/admin/products', label: 'Товары', icon: Package },
     { href: '/admin/procedures', label: 'Процедуры', icon: ClipboardList },
     { href: '/admin/doctors', label: 'Врачи', icon: Stethoscope },

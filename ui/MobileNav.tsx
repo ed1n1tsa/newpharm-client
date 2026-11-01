@@ -3,13 +3,11 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Home, ShoppingCart, User, Boxes } from 'lucide-react'
-import { useCart } from './CartContext'
+import { Home, LayoutGrid, Stethoscope, Tag, User } from 'lucide-react'
 import { supabase } from '@/lib/supabase-browser'
 
 export default function MobileNav() {
   const pathname = usePathname()
-  const { count } = useCart()
   const [loggedIn, setLoggedIn] = useState(false)
 
   useEffect(() => {
@@ -23,36 +21,33 @@ export default function MobileNav() {
   const catalogHref = loggedIn ? '/client/products' : '/catalog'
   const navItems = [
     { href: '/', label: 'Главная', icon: Home },
-    { href: catalogHref, label: 'Каталог', icon: Boxes },
-    { href: '/cart', label: 'Корзина', icon: ShoppingCart, cart: true },
-    { href: loggedIn ? '/client/profile' : '/profile', label: 'Профиль', icon: User },
+    { href: catalogHref, label: 'Каталог', icon: LayoutGrid },
+    { href: '/doctors', label: 'Врачи', icon: Stethoscope },
+    { href: '/#promos', label: 'Акции', icon: Tag },
+    {
+      href: loggedIn ? '/client/profile' : '/login',
+      label: loggedIn ? 'Профиль' : 'Войти',
+      icon: User,
+    },
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-sm md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-emerald-50 md:hidden pb-[env(safe-area-inset-bottom)]">
       <div className="flex justify-around items-center h-16">
-        {navItems.map(({ href, label, icon: Icon, cart }) => {
+        {navItems.map(({ href, label, icon: Icon }) => {
+          const pathOnly = href.split('#')[0] || '/'
           const isActive =
-            pathname === href ||
-            (href !== '/' && pathname.startsWith(href.split('?')[0]))
+            pathOnly === '/'
+              ? pathname === '/'
+              : pathname === pathOnly || pathname.startsWith(pathOnly + '/')
           return (
             <Link
               key={label}
               href={href}
-              className="relative flex flex-col items-center text-xs text-gray-600 hover:text-emerald-600 transition"
+              className="relative flex flex-col items-center text-[11px] text-slate-500 hover:text-emerald-600 transition min-w-[56px]"
             >
-              <Icon
-                size={22}
-                className={isActive ? 'text-emerald-600' : 'text-gray-400'}
-              />
-              {cart && count > 0 && (
-                <span className="absolute -top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center">
-                  {count > 99 ? '99+' : count}
-                </span>
-              )}
-              <span className={isActive ? 'text-emerald-600 font-medium' : ''}>
-                {label}
-              </span>
+              <Icon size={22} className={isActive ? 'text-emerald-600' : 'text-slate-400'} />
+              <span className={isActive ? 'text-emerald-600 font-semibold' : ''}>{label}</span>
             </Link>
           )
         })}
