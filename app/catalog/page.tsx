@@ -1,47 +1,17 @@
 import CatalogView from "@/ui/ProductList";
 import ServicesSection from "@/ui/ServicesSection";
-import { categories as mockCategories, products as mockProducts } from "@/lib/mockData";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { loadCatalogProducts } from "@/lib/catalog-products";
 
 export const metadata = {
   title: "Каталог — NewPharm",
 };
-
-async function getProducts() {
-  try {
-    const { data: products, error } = await supabaseAdmin
-      .from("products")
-      .select("*")
-      .eq("is_active", true)
-      .order("updated_at", { ascending: false })
-      .limit(10000);
-
-    if (error) throw error;
-
-    if (!products?.length) {
-      return { categories: mockCategories, products: mockProducts as any };
-    }
-
-    const categories = Array.from(
-      new Set(products.map((p) => p.category).filter(Boolean))
-    ).map((name) => ({
-      id: String(name).toLowerCase().replace(/\s+/g, "-"),
-      name: String(name),
-    }));
-
-    return { categories, products };
-  } catch (err: any) {
-    console.error("Ошибка загрузки из Supabase:", err.message);
-    return { categories: mockCategories, products: mockProducts as any };
-  }
-}
 
 export default async function CatalogPage({
   searchParams,
 }: {
   searchParams?: Promise<{ q?: string }> | { q?: string };
 }) {
-  const { categories, products } = await getProducts();
+  const { categories, products } = await loadCatalogProducts();
   const sp = await Promise.resolve(searchParams);
   const initialSearch = sp?.q ? String(sp.q) : "";
 

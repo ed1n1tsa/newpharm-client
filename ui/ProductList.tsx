@@ -9,9 +9,9 @@ import ProductToolbar from "./ProductToolbar"
 type Product = {
   id: string
   name: string
-  category: string
+  category?: string | null
   price: number
-  image_url: string
+  image_url?: string | null
   short_desc?: string | null
   full_desc?: string | null
 }
@@ -159,7 +159,7 @@ export default function ProductList({
                 price: p.price,
                 image: p.image_url || "/images/product.png",
                 description: p.short_desc || p.full_desc || "",
-                category: p.category,
+                category: p.category || "",
               }}
             />
           ))}

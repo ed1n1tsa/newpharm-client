@@ -23,19 +23,23 @@ export default function ProductPageClient({ product }: { product: Product }) {
   const [added, setAdded] = useState(false)
   const { add } = useCart()
 
-  async function handleAddToCart() {
+  function handleAddToCart() {
+    if (adding) return
+    setAdding(true)
     try {
-      setAdding(true)
-      add({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        image_url: product.image_url,
-      })
+      add(
+        {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image_url: product.image_url,
+        },
+        1
+      )
       setAdded(true)
       setTimeout(() => setAdded(false), 2000)
     } finally {
-      setAdding(false)
+      setTimeout(() => setAdding(false), 400)
     }
   }
 

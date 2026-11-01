@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useToast } from "./Toast";
@@ -54,11 +55,9 @@ function readGuest(): CartItem[] {
   }
 }
 
-function writeGuest(items: CartItem[]) {
+/** Persist without broadcasting (avoids same-window refresh races). */
+function writeGuestSilent(items: CartItem[]) {
   localStorage.setItem(GUEST_CART_KEY, JSON.stringify(items));
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("np-cart-changed"));
-  }
 }
 
 export default function CartProvider({
@@ -69,82 +68,87 @@ export default function CartProvider({
   const toast = useToast();
   const [items, setItems] = useState<CartItem[]>([]);
   const [ready, setReady] = useState(false);
+  const itemsRef = useRef<CartItem[]>([]);
+  const addLock = useRef(false);
+
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
 
   const refresh = useCallback(() => {
-    setItems(readGuest());
+    const next = readGuest();
+    itemsRef.current = next;
+    setItems(next);
     setReady(true);
   }, []);
 
   useEffect(() => {
     refresh();
+    // Cross-tab only — do NOT listen to same-window custom events
+    // (those caused double setState / race with add).
     const onStorage = (e: StorageEvent) => {
       if (e.key === GUEST_CART_KEY) refresh();
     };
-    const onCustom = () => refresh();
     window.addEventListener("storage", onStorage);
-    window.addEventListener("np-cart-changed", onCustom);
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("np-cart-changed", onCustom);
-    };
+    return () => window.removeEventListener("storage", onStorage);
   }, [refresh]);
-
-  const persist = useCallback((next: CartItem[]) => {
-    writeGuest(next);
-    setItems(next);
-  }, []);
 
   const add: CartContextType["add"] = useCallback(
     (product, qty = 1) => {
+      if (!product?.id) return;
+      // Guard against double-fires (StrictMode/event duplication)
+      if (addLock.current) return;
+      addLock.current = true;
+      queueMicrotask(() => {
+        addLock.current = false;
+      });
+
       const name = product.name || product.title || "Товар";
       const image_url = product.image_url || product.image || null;
-      setItems((prev) => {
-        const next = [...prev];
-        const i = next.findIndex((it) => it.productId === product.id);
-        if (i >= 0) next[i] = { ...next[i], qty: next[i].qty + qty };
-        else {
-          next.push({
-            productId: product.id,
-            qty,
-            name,
-            price: Number(product.price) || 0,
-            image_url,
-          });
-        }
-        writeGuest(next);
-        return next;
-      });
+      const amount = Math.max(1, Number(qty) || 1);
+
+      const prev = itemsRef.current;
+      const next = [...prev];
+      const i = next.findIndex((it) => it.productId === product.id);
+      if (i >= 0) next[i] = { ...next[i], qty: next[i].qty + amount };
+      else {
+        next.push({
+          productId: String(product.id),
+          qty: amount,
+          name,
+          price: Number(product.price) || 0,
+          image_url,
+        });
+      }
+      itemsRef.current = next;
+      writeGuestSilent(next);
+      setItems(next);
       toast.show("Товар добавлен в корзину");
     },
     [toast]
   );
 
-  const setQty = useCallback(
-    (productId: string, qty: number) => {
-      setItems((prev) => {
-        const next =
-          qty < 1
-            ? prev.filter((i) => i.productId !== productId)
-            : prev.map((i) =>
-                i.productId === productId ? { ...i, qty } : i
-              );
-        writeGuest(next);
-        return next;
-      });
-    },
-    []
-  );
+  const setQty = useCallback((productId: string, qty: number) => {
+    const prev = itemsRef.current;
+    const next =
+      qty < 1
+        ? prev.filter((i) => i.productId !== productId)
+        : prev.map((i) => (i.productId === productId ? { ...i, qty } : i));
+    itemsRef.current = next;
+    writeGuestSilent(next);
+    setItems(next);
+  }, []);
 
   const remove = useCallback((productId: string) => {
-    setItems((prev) => {
-      const next = prev.filter((i) => i.productId !== productId);
-      writeGuest(next);
-      return next;
-    });
+    const next = itemsRef.current.filter((i) => i.productId !== productId);
+    itemsRef.current = next;
+    writeGuestSilent(next);
+    setItems(next);
   }, []);
 
   const clear = useCallback(() => {
-    writeGuest([]);
+    itemsRef.current = [];
+    writeGuestSilent([]);
     setItems([]);
   }, []);
 
@@ -153,57 +157,64 @@ export default function CartProvider({
     let cancelled = false;
     let syncedFor: string | null = null;
 
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const user = session?.user;
-      if (!user || cancelled || syncedFor === user.id) return;
-      const guest = readGuest();
-      if (!guest.length) return;
-      syncedFor = user.id;
-
-      try {
-        let { data: cart } = await supabase
-          .from("carts")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("status", "active")
-          .maybeSingle();
-
-        if (!cart) {
-          const { data: created, error } = await supabase
-            .from("carts")
-            .insert({ user_id: user.id, status: "active" })
-            .select("id")
-            .single();
-          if (error) throw error;
-          cart = created;
+    const { data: sub } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        // Skip noisy INITIAL_SESSION duplicates where possible
+        if (event !== "SIGNED_IN" && event !== "TOKEN_REFRESHED" && event !== "INITIAL_SESSION") {
+          return;
         }
+        const user = session?.user;
+        if (!user || cancelled || syncedFor === user.id) return;
+        const guest = readGuest();
+        if (!guest.length) return;
+        syncedFor = user.id;
 
-        for (const item of guest) {
-          const { data: existing } = await supabase
-            .from("cart_items")
-            .select("id, quantity")
-            .eq("cart_id", cart!.id)
-            .eq("product_id", item.productId)
+        try {
+          let { data: cart } = await supabase
+            .from("carts")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("status", "active")
             .maybeSingle();
 
-          if (existing) {
-            await supabase
-              .from("cart_items")
-              .update({ quantity: item.qty, price: item.price })
-              .eq("id", existing.id);
-          } else {
-            await supabase.from("cart_items").insert({
-              cart_id: cart!.id,
-              product_id: item.productId,
-              quantity: item.qty,
-              price: item.price,
-            });
+          if (!cart) {
+            const { data: created, error } = await supabase
+              .from("carts")
+              .insert({ user_id: user.id, status: "active" })
+              .select("id")
+              .single();
+            if (error) throw error;
+            cart = created;
           }
+
+          for (const item of guest) {
+            const { data: existing } = await supabase
+              .from("cart_items")
+              .select("id, quantity")
+              .eq("cart_id", cart!.id)
+              .eq("product_id", item.productId)
+              .maybeSingle();
+
+            if (existing) {
+              // Set absolute qty from guest cart — do not add again
+              await supabase
+                .from("cart_items")
+                .update({ quantity: item.qty, price: item.price })
+                .eq("id", existing.id);
+            } else {
+              await supabase.from("cart_items").insert({
+                cart_id: cart!.id,
+                product_id: item.productId,
+                quantity: item.qty,
+                price: item.price,
+              });
+            }
+          }
+        } catch (err) {
+          console.warn("Не удалось синхронизировать корзину с сервером", err);
         }
-      } catch (err) {
-        console.warn("Не удалось синхронизировать корзину с сервером", err);
       }
-    });
+    );
 
     return () => {
       cancelled = true;

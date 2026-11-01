@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
@@ -14,14 +14,15 @@ import {
 import { useCart } from '@/ui/CartContext'
 import PhoneAuthPanel from '@/ui/PhoneAuthPanel'
 import { supabase } from '@/lib/supabase-browser'
-import { pharmacyDisplayName, type WarehouseFit } from '@/lib/pharmacy'
-import { formatPhoneDisplay } from '@/lib/phone'
+import { pharmacyDisplayName } from '@/lib/pharmacy'
+import { formatPhoneDisplay, phoneToWhatsAppLink } from '@/lib/phone'
 import {
   DeliveryType,
   formatMoney,
   readCheckoutPrefs,
   writeCheckoutPrefs,
 } from '@/lib/checkout-prefs'
+import { usePharmacyAvailability } from '@/lib/use-pharmacy-availability'
 
 type Step = 1 | 2 | 3
 
@@ -34,16 +35,35 @@ export default function CheckoutContent() {
   const [deliveryType, setDeliveryType] = useState<DeliveryType>('pickup')
   const [address, setAddress] = useState('')
   const [warehouseId, setWarehouseId] = useState<string | null>(null)
-  const [fits, setFits] = useState<WarehouseFit[]>([])
-  const [loadingAvail, setLoadingAvail] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [orderId, setOrderId] = useState<string | null>(null)
+  const [orderSnapshot, setOrderSnapshot] = useState<{
+    total: number
+    pharmacyName: string
+    pharmacyPhone: string | null
+    waText: string
+  } | null>(null)
   const [prefsReady, setPrefsReady] = useState(false)
 
   const deliveryCost = deliveryType === 'delivery' ? 1000 : 0
   const grandTotal = total + deliveryCost
+
+  const lines = useMemo(
+    () => items.map((i) => ({ productId: i.productId, qty: i.qty })),
+    [items]
+  )
+  const { fits, loading: loadingAvail, recommendedId } =
+    usePharmacyAvailability(lines, {
+      onError: (msg) => setError(msg),
+    })
+
+  useEffect(() => {
+    if (recommendedId) {
+      setWarehouseId((prev) => prev || recommendedId)
+    }
+  }, [recommendedId])
 
   const selectedFit = useMemo(
     () => fits.find((f) => f.warehouse.id === warehouseId) || fits[0] || null,
@@ -54,6 +74,11 @@ export default function CheckoutContent() {
     if (!selectedFit) return []
     return selectedFit.lines.filter((l) => l.shortfall > 0)
   }, [selectedFit])
+
+  const pharmacyPhone = selectedFit?.warehouse.phone || null
+  const pharmacyWa = pharmacyPhone
+    ? phoneToWhatsAppLink(pharmacyPhone)
+    : null
 
   useEffect(() => {
     const prefs = readCheckoutPrefs()
@@ -88,35 +113,6 @@ export default function CheckoutContent() {
     return () => sub.subscription.unsubscribe()
   }, [])
 
-  const loadAvailability = useCallback(async () => {
-    if (!items.length) {
-      setFits([])
-      return
-    }
-    setLoadingAvail(true)
-    try {
-      const res = await fetch('/api/pharmacies/availability', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Ошибка остатков')
-      setFits(data.warehouses || [])
-      setWarehouseId((prev) => prev || data.recommendedWarehouseId)
-    } catch (err: any) {
-      setError(err?.message || 'Не удалось загрузить аптеки')
-    } finally {
-      setLoadingAvail(false)
-    }
-  }, [items])
-
-  useEffect(() => {
-    loadAvailability()
-  }, [loadAvailability])
-
   async function placeOrder() {
     setError(null)
     setMessage(null)
@@ -147,6 +143,10 @@ export default function CheckoutContent() {
       const token = sessionData.session?.access_token
       if (!token) throw new Error('Сессия истекла — войдите снова')
 
+      const snapshotItems = [...items]
+      const snapshotFit = selectedFit
+      const snapshotTotal = grandTotal
+
       const res = await fetch('/api/orders/create', {
         method: 'POST',
         headers: {
@@ -154,7 +154,7 @@ export default function CheckoutContent() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          items: items.map((i) => ({
+          items: snapshotItems.map((i) => ({
             productId: i.productId,
             qty: i.qty,
             price: i.price,
@@ -174,14 +174,29 @@ export default function CheckoutContent() {
           setError(
             'В выбранной аптеке не хватает товаров — уменьшите количество или смените аптеку'
           )
-          await loadAvailability()
           setStep(1)
         }
         throw new Error(data.error || 'Не удалось создать заказ')
       }
+
+      const phName = snapshotFit
+        ? pharmacyDisplayName(snapshotFit.warehouse.name)
+        : 'аптека'
+      const phPhone = snapshotFit?.warehouse.phone || null
+      const linesText = snapshotItems
+        .map((i) => `• ${i.name} × ${i.qty}`)
+        .join('\n')
+      const waText = `Здравствуйте! Заказ NewPharm ${data.order.id}\n${phName}\n${linesText}\nИтого: ${snapshotTotal.toLocaleString('ru-RU')} ₸\nТел. клиента: ${phone}`
+
+      setOrderSnapshot({
+        total: snapshotTotal,
+        pharmacyName: phName,
+        pharmacyPhone: phPhone,
+        waText,
+      })
       setOrderId(data.order.id)
       setMessage(
-        'Заказ принят. Оплата онлайн не требуется — заберите или дождитесь доставки.'
+        'Заказ принят. Напишите в WhatsApp выбранной аптеки для подтверждения и получения.'
       )
       clear()
     } catch (err: any) {
@@ -233,6 +248,13 @@ export default function CheckoutContent() {
   }
 
   if (orderId) {
+    const waHref =
+      orderSnapshot?.pharmacyPhone
+        ? phoneToWhatsAppLink(
+            orderSnapshot.pharmacyPhone,
+            orderSnapshot.waText
+          )
+        : null
     return (
       <main className="max-w-lg mx-auto px-4 py-16 text-center space-y-4 bg-[#f6f7f8] min-h-[60vh]">
         <div className="mx-auto size-14 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
@@ -241,8 +263,29 @@ export default function CheckoutContent() {
         <h1 className="text-2xl font-bold text-emerald-800">Заказ оформлен</h1>
         <p className="text-slate-600">{message}</p>
         <p className="text-sm text-slate-500">Номер: {orderId}</p>
-        <p className="text-sm text-slate-500">Оплата: на кассе при получении</p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
+        {orderSnapshot && (
+          <p className="text-sm text-slate-600">
+            {orderSnapshot.pharmacyName}
+            {orderSnapshot.pharmacyPhone
+              ? ` · ${formatPhoneDisplay(orderSnapshot.pharmacyPhone)}`
+              : ''}
+          </p>
+        )}
+        <div className="flex flex-col gap-3 justify-center pt-4">
+          {waHref ? (
+            <a
+              href={waHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-xl bg-[#25D366] hover:bg-[#1ebe57] text-white px-5 py-3 font-semibold"
+            >
+              Написать в WhatsApp аптеки
+            </a>
+          ) : (
+            <p className="text-sm text-amber-700">
+              Номер WhatsApp аптеки не найден — позвоните по контактам на сайте.
+            </p>
+          )}
           <Link
             href="/client/orders"
             className="rounded-xl bg-emerald-700 text-white px-5 py-2.5 font-semibold"
@@ -250,7 +293,7 @@ export default function CheckoutContent() {
             Мои заказы
           </Link>
           <Link
-            href="/catalog"
+            href="/client/products"
             className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 font-semibold"
           >
             В каталог
@@ -265,7 +308,7 @@ export default function CheckoutContent() {
       <main className="max-w-xl mx-auto px-4 py-16 text-center bg-[#f6f7f8] min-h-[60vh]">
         <h1 className="text-2xl font-bold mb-3">Нечего оформлять</h1>
         <p className="text-slate-500 mb-6">Добавьте товары в корзину</p>
-        <Link href="/catalog" className="text-emerald-700 font-semibold">
+        <Link href="/client/products" className="text-emerald-700 font-semibold">
           Перейти в каталог
         </Link>
       </main>
@@ -286,7 +329,7 @@ export default function CheckoutContent() {
 
   return (
     <div className="bg-[#f6f7f8] min-h-[70vh]">
-      <main className="max-w-xl mx-auto px-4 py-6 pb-36">
+      <main className="max-w-xl mx-auto px-4 py-6 pb-40">
         <div className="flex items-center gap-3 mb-6">
           <Link
             href={step === 1 ? '/cart' : '#'}
@@ -639,13 +682,32 @@ export default function CheckoutContent() {
                       </button>
                     </div>
 
-                    <div className="rounded-xl border border-slate-200 p-3">
+                    <div className="rounded-xl border border-slate-200 p-3 space-y-2">
                       <p className="text-sm font-medium text-slate-800">
-                        Способ оплаты
+                        Связь с аптекой
                       </p>
-                      <p className="text-sm text-slate-600 mt-1">
-                        На кассе при получении · без онлайн-оплаты
+                      <p className="text-sm text-slate-600">
+                        Онлайн-оплаты нет. После оформления напишите в WhatsApp
+                        выбранной аптеки для брони и получения.
                       </p>
+                      {pharmacyWa && pharmacyPhone ? (
+                        <a
+                          href={phoneToWhatsAppLink(
+                            pharmacyPhone,
+                            `Здравствуйте! Хочу оформить заказ NewPharm (${pharmacyDisplayName(selectedFit!.warehouse.name)}).`
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center w-full rounded-xl bg-[#25D366] hover:bg-[#1ebe57] text-white px-4 py-2.5 text-sm font-semibold"
+                        >
+                          WhatsApp: {formatPhoneDisplay(pharmacyPhone)}
+                        </a>
+                      ) : (
+                        <p className="text-xs text-amber-700">
+                          У аптеки пока нет номера в базе — выберите другую или
+                          позвоните по контактам на сайте.
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -660,8 +722,8 @@ export default function CheckoutContent() {
           </div>
         )}
 
-        {/* Sticky footer CTA */}
-        <div className="fixed bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:pb-3">
+        {/* Sticky footer CTA — site footer hidden on /checkout */}
+        <div className="fixed bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           <div className="max-w-xl mx-auto flex items-center gap-4">
             <div className="min-w-0">
               <p className="text-xs text-slate-500">Итого</p>
@@ -691,7 +753,7 @@ export default function CheckoutContent() {
           </div>
           {step === 3 && (
             <p className="max-w-xl mx-auto text-[11px] text-slate-500 text-center mt-2">
-              Мы зарезервируем товар в выбранной аптеке и сообщим о готовности
+              После подтверждения откроется WhatsApp аптеки для связи
             </p>
           )}
         </div>

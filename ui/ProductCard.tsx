@@ -25,15 +25,14 @@ export default function ProductCard({ product, variant = "grid" }: Props) {
   const [adding, setAdding] = useState(false)
   const [added, setAdded] = useState(false)
   const imgRef = useRef<HTMLImageElement>(null)
+  const clickGuard = useRef(false)
   const { add } = useCart()
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
-    if (!product?.id) {
-      console.error('ProductCard: missing product.id', product)
-      return
-    }
+    if (!product?.id || adding || clickGuard.current) return
+    clickGuard.current = true
     try {
       setAdding(true)
       add({
@@ -41,7 +40,7 @@ export default function ProductCard({ product, variant = "grid" }: Props) {
         name: product.title,
         price: product.price,
         image_url: product.image,
-      })
+      }, 1)
       flyToCart()
       setAdded(true)
       setTimeout(() => setAdded(false), 2000)
@@ -49,6 +48,9 @@ export default function ProductCard({ product, variant = "grid" }: Props) {
       console.error('ProductCard add failed', err)
     } finally {
       setAdding(false)
+      setTimeout(() => {
+        clickGuard.current = false
+      }, 400)
     }
   }
 

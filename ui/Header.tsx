@@ -3,11 +3,10 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import { Search, ShoppingCart, User } from 'lucide-react'
 import { useCart } from './CartContext'
 import { supabase } from '@/lib/supabase-browser'
-import { useEffect } from 'react'
 
 export default function Header() {
   const pathname = usePathname()
@@ -25,14 +24,20 @@ export default function Header() {
     return () => sub.subscription.unsubscribe()
   }, [])
 
+  const catalogHref = loggedIn || isClientArea ? '/client/products' : '/catalog'
+
   function onSearch(e: FormEvent) {
     e.preventDefault()
     const query = q.trim()
     if (!query) {
-      router.push('/catalog')
+      router.push(catalogHref)
       return
     }
-    router.push(`/catalog?q=${encodeURIComponent(query)}`)
+    if (loggedIn || isClientArea) {
+      router.push(`/client/products?q=${encodeURIComponent(query)}`)
+    } else {
+      router.push(`/catalog?q=${encodeURIComponent(query)}`)
+    }
   }
 
   return (
@@ -78,18 +83,32 @@ export default function Header() {
         </form>
 
         <nav className="hidden lg:flex gap-5 text-sm font-medium text-black ml-auto">
-          {isClientArea ? (
+          {isClientArea || loggedIn ? (
             <>
-              <Link href="/catalog" className="hover:text-emerald-600 transition">Каталог</Link>
-              <Link href="/cart" className="hover:text-emerald-600 transition">Корзина</Link>
-              <Link href="/client/orders" className="hover:text-emerald-600 transition">Мои заказы</Link>
+              <Link href="/client/products" className="hover:text-emerald-600 transition">
+                Каталог
+              </Link>
+              <Link href="/cart" className="hover:text-emerald-600 transition">
+                Корзина
+              </Link>
+              <Link href="/client/orders" className="hover:text-emerald-600 transition">
+                Мои заказы
+              </Link>
             </>
           ) : (
             <>
-              <Link href="/" className="hover:text-emerald-600 transition">Главная</Link>
-              <Link href="/catalog" className="hover:text-emerald-600 transition">Каталог</Link>
-              <Link href="/doctors" className="hover:text-emerald-600 transition">Врачи</Link>
-              <Link href="/branches" className="hover:text-emerald-600 transition">Филиалы</Link>
+              <Link href="/" className="hover:text-emerald-600 transition">
+                Главная
+              </Link>
+              <Link href="/catalog" className="hover:text-emerald-600 transition">
+                Каталог
+              </Link>
+              <Link href="/doctors" className="hover:text-emerald-600 transition">
+                Врачи
+              </Link>
+              <Link href="/branches" className="hover:text-emerald-600 transition">
+                Филиалы
+              </Link>
             </>
           )}
         </nav>
@@ -118,12 +137,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile search under header bar */}
-      <form
-        onSubmit={onSearch}
-        className="sm:hidden px-4 pb-3"
-        role="search"
-      >
+      <form onSubmit={onSearch} className="sm:hidden px-4 pb-3" role="search">
         <div className="relative">
           <Search
             size={16}

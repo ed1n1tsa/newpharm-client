@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
@@ -14,10 +14,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useCart } from '@/ui/CartContext'
-import {
-  pharmacyDisplayName,
-  type WarehouseFit,
-} from '@/lib/pharmacy'
+import { pharmacyDisplayName } from '@/lib/pharmacy'
 import {
   DeliveryType,
   extractVolume,
@@ -26,14 +23,13 @@ import {
   readCheckoutPrefs,
   writeCheckoutPrefs,
 } from '@/lib/checkout-prefs'
+import { usePharmacyAvailability } from '@/lib/use-pharmacy-availability'
 
 export default function PublicCartPage() {
   const { items, total, count, setQty, remove, clear, ready } = useCart()
   const [deliveryType, setDeliveryType] = useState<DeliveryType>('pickup')
   const [warehouseId, setWarehouseId] = useState<string | null>(null)
-  const [fits, setFits] = useState<WarehouseFit[]>([])
   const [pickerOpen, setPickerOpen] = useState(false)
-  const [loadingAvail, setLoadingAvail] = useState(false)
 
   useEffect(() => {
     const prefs = readCheckoutPrefs()
@@ -41,32 +37,16 @@ export default function PublicCartPage() {
     if (prefs.warehouseId) setWarehouseId(prefs.warehouseId)
   }, [])
 
-  const loadAvailability = useCallback(async () => {
-    if (!items.length) {
-      setFits([])
-      return
-    }
-    setLoadingAvail(true)
-    try {
-      const res = await fetch('/api/pharmacies/availability', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: items.map((i) => ({ productId: i.productId, qty: i.qty })),
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.ok) return
-      setFits(data.warehouses || [])
-      setWarehouseId((prev) => prev || data.recommendedWarehouseId)
-    } finally {
-      setLoadingAvail(false)
-    }
-  }, [items])
+  const lines = useMemo(
+    () => items.map((i) => ({ productId: i.productId, qty: i.qty })),
+    [items]
+  )
+  const { fits, loading: loadingAvail, recommendedId } =
+    usePharmacyAvailability(lines)
 
   useEffect(() => {
-    loadAvailability()
-  }, [loadAvailability])
+    if (recommendedId) setWarehouseId((prev) => prev || recommendedId)
+  }, [recommendedId])
 
   useEffect(() => {
     writeCheckoutPrefs({ deliveryType, warehouseId })
@@ -260,7 +240,8 @@ export default function PublicCartPage() {
 
   return (
     <div className="bg-[#f6f7f8] min-h-[70vh]">
-      <main className="max-w-6xl mx-auto px-4 py-8 pb-36 md:pb-12">
+      {/* Site footer/mobile nav hidden on /cart — keep bottom padding for safety */}
+      <main className="max-w-6xl mx-auto px-4 py-8 pb-10">
         <nav className="text-sm text-slate-500 mb-4">
           <Link href="/" className="hover:text-emerald-700">
             Главная
