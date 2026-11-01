@@ -4,7 +4,7 @@ import { useRef, useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { ShoppingCart } from "lucide-react"
-import { supabase } from "@/lib/supabase-browser"
+import { useCart } from "./CartContext"
 
 type Variant = "grid" | "list"
 
@@ -25,80 +25,35 @@ export default function ProductCard({ product, variant = "grid" }: Props) {
   const [adding, setAdding] = useState(false)
   const [added, setAdded] = useState(false)
   const imgRef = useRef<HTMLImageElement>(null)
+  const clickGuard = useRef(false)
+  const { add } = useCart()
 
-  async function handleAddToCart() {
+  function handleAddToCart(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!product?.id || adding || clickGuard.current) return
+    clickGuard.current = true
     try {
       setAdding(true)
-      const { data: userData } = await supabase.auth.getUser()
-      const user = userData?.user
-      if (!user) {
-        alert("Для добавления в корзину необходимо войти в аккаунт")
-        window.location.href = "/login"
-        return
-      }
-
-      // 🔹 Получаем или создаём корзину
-      let { data: cart } = await supabase
-        .from("carts")
-        .select("id")
-        .eq("user_id", user.id)
-        .single()
-
-      if (!cart) {
-        const { data: newCart, error: createError } = await supabase
-          .from("carts")
-          .insert({ user_id: user.id })
-          .select()
-          .single()
-        if (createError) throw createError
-        cart = newCart
-      }
-
-      // 🔹 Проверяем наличие товара
-      const { data: existing } = await supabase
-        .from("cart_items")
-        .select("id, quantity")
-        .eq("cart_id", cart!.id)
-        .eq("product_id", product.id)
-        .maybeSingle()
-
-      if (existing) {
-        await supabase
-          .from("cart_items")
-          .update({ quantity: existing.quantity + 1 })
-          .eq("id", existing.id)
-      } else {
-        const { error } = await supabase.from("cart_items").insert({
-          cart_id: cart!.id,
-          product_id: product.id,
-          quantity: 1,
-          price: product.price,
-        })
-        if (error) throw error
-      }
-
-      // ✈️ Анимация полёта
+      add({
+        id: String(product.id),
+        name: product.title,
+        price: product.price,
+        image_url: product.image,
+      }, 1)
       flyToCart()
-
-      // ✅ Локально обновляем счётчик корзины
-      if (
-        typeof window !== "undefined" &&
-        typeof (window as any).incrementCartCount === "function"
-      ) {
-        ;(window as any).incrementCartCount()
-      }
-
       setAdded(true)
       setTimeout(() => setAdded(false), 2000)
-    } catch (err: any) {
-      console.error("Ошибка добавления в корзину:", err.message)
-      alert("Ошибка при добавлении в корзину.")
+    } catch (err) {
+      console.error('ProductCard add failed', err)
     } finally {
       setAdding(false)
+      setTimeout(() => {
+        clickGuard.current = false
+      }, 400)
     }
   }
 
-  // ✈️ Эффект "полет к корзине"
   function flyToCart() {
     const img = imgRef.current
     if (!img) return
@@ -139,7 +94,6 @@ export default function ProductCard({ product, variant = "grid" }: Props) {
       transition={{ duration: 0.35 }}
       className="relative rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition"
     >
-      {/* ❤️ Избранное */}
       <button
         aria-label="В избранное"
         onClick={() => setFav(!fav)}
@@ -171,7 +125,6 @@ export default function ProductCard({ product, variant = "grid" }: Props) {
         </div>
       </Link>
 
-      {/* 🧾 Инфо */}
       <div className="mt-2 space-y-1">
         <div className="text-slate-900 font-bold text-base">
           {product.price.toLocaleString("ru-RU")} ₸
@@ -184,7 +137,6 @@ export default function ProductCard({ product, variant = "grid" }: Props) {
         </Link>
       </div>
 
-      {/* 🛒 Кнопка */}
       <button
         disabled={adding}
         onClick={handleAddToCart}

@@ -19,7 +19,7 @@ import {
     { href: '/client/doctors', label: 'Консультации', icon: Video, mobile: false },
     { href: '/client/certificates', label: 'Справки', icon: MessageCircle, mobile: false },
     { href: '/client/profile', label: 'Профиль', icon: User, mobile: false },
-    { href: '/client/cart', label: 'Корзина', icon: ShoppingCart, mobile: false },
+    { href: '/cart', label: 'Корзина', icon: ShoppingCart, mobile: false },
     { href: '/client/more', label: 'Ещё', icon: MoreHorizontal, mobile: true, mobileOnly: true },
   ]
   
