@@ -103,23 +103,15 @@ export default function HomeHero({ catalogHref }: { catalogHref: string }) {
             </div>
           </div>
 
-          {/* Illustration — large, with soft green blob */}
-          <div className="relative w-[148px] sm:w-[200px] lg:w-full lg:max-w-[480px] lg:justify-self-end aspect-square flex items-center justify-center -mr-1">
-            <div
-              aria-hidden
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[125%] h-[125%] rounded-[42%] bg-[radial-gradient(ellipse_at_center,#c6f0d4_0%,#e8f8ee_45%,transparent_72%)]"
-            />
-            <div
-              aria-hidden
-              className="absolute left-[4%] top-[14%] w-[84%] h-[74%] rounded-[48%_42%_55%_40%] bg-[#b8ebc8]/60 blur-[1px]"
-            />
+          {/* Illustration — mock hero art (green blob already in asset) */}
+          <div className="relative w-[158px] sm:w-[220px] lg:w-full lg:max-w-[520px] lg:justify-self-end flex items-center justify-center -mr-1 lg:-mr-2">
             <Image
               src="/home/hero-bottles.png"
               alt="Лекарства NewPharm"
-              width={560}
-              height={560}
+              width={1373}
+              height={756}
               priority
-              className="relative z-[1] w-[115%] max-w-none h-auto object-contain drop-shadow-[0_12px_28px_rgba(22,163,74,0.16)] scale-[1.15] lg:scale-[1.28] origin-center"
+              className="relative z-[1] w-full h-auto object-contain scale-[1.08] lg:scale-[1.12] origin-center"
               unoptimized
             />
           </div>
