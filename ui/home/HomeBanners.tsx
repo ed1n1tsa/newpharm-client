@@ -1,16 +1,19 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import type { HomeBanner } from '@/lib/homepage-cms'
 
 /** Full-bleed mock backgrounds (photo 2 / photo 3). */
 function bannerBg(b: HomeBanner) {
-  if (b.kind === 'promo' || b.id.includes('d3') || b.image.includes('d3')) {
+  if (b.kind === 'promo' || b.id.includes('d3') || (b.image || '').includes('d3')) {
     return '/home/banner-d3-bg.png'
   }
-  if (b.kind === 'consult' || b.id.includes('doctor') || b.image.includes('doctor')) {
+  if (
+    b.kind === 'consult' ||
+    b.id.includes('doctor') ||
+    (b.image || '').includes('doctor')
+  ) {
     return '/home/banner-doctor-bg.png'
   }
   return b.image || '/home/banner-d3-bg.png'
@@ -24,20 +27,22 @@ function BannerCard({ b, compact }: { b: HomeBanner; compact?: boolean }) {
     <Link
       href={b.href}
       className={`relative overflow-hidden rounded-[22px] flex flex-col justify-center ${
-        compact ? 'min-h-[132px] p-4' : 'min-h-[148px] md:min-h-[160px] p-5 md:p-6'
+        compact ? 'min-h-[132px] p-4' : 'min-h-[152px] md:min-h-[168px] p-5 md:p-6'
       } ${isPromo ? 'text-white' : 'text-[#111827]'}`}
+      style={{
+        // Edge color of mock art — fills any subpixel gaps under the photo
+        backgroundColor: isPromo ? '#035630' : '#f2fbf1',
+      }}
     >
-      {/* Background from mock assets */}
-      <Image
-        src={bg}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={`${bg}?v=4`}
         alt=""
-        fill
-        className="object-cover object-right z-0"
-        unoptimized
-        priority={false}
+        aria-hidden
+        draggable={false}
+        className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover object-center select-none"
       />
-
-      <div className="relative z-[1] max-w-[58%] sm:max-w-[55%]">
+      <div className="relative z-[1] max-w-[58%] sm:max-w-[52%]">
         {b.subtitle && (
           <span
             className={`inline-flex text-[10px] font-semibold rounded-full px-2 py-0.5 mb-2 ${
