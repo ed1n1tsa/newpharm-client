@@ -31,12 +31,12 @@ function BannerCard({ b, compact }: { b: HomeBanner; compact?: boolean }) {
       } ${isPromo ? 'text-white' : 'text-[#111827]'}`}
       style={{
         // Edge color of mock art — fills any subpixel gaps under the photo
-        backgroundColor: isPromo ? '#035630' : '#f2fbf1',
+        backgroundColor: isPromo ? '#026a3e' : '#f3faf2',
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={`${bg}?v=4`}
+        src={`${bg}?v=5`}
         alt=""
         aria-hidden
         draggable={false}
