@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { HomeBanner } from '@/lib/homepage-cms'
 
 /** Full-bleed mock backgrounds (photo 2 / photo 3). */
@@ -27,10 +27,9 @@ function BannerCard({ b, compact }: { b: HomeBanner; compact?: boolean }) {
     <Link
       href={b.href}
       className={`relative overflow-hidden rounded-[22px] flex flex-col justify-center ${
-        compact ? 'min-h-[132px] p-4' : 'min-h-[152px] md:min-h-[168px] p-5 md:p-6'
+        compact ? 'min-h-[140px] p-4' : 'min-h-[152px] md:min-h-[168px] p-5 md:p-6'
       } ${isPromo ? 'text-white' : 'text-[#111827]'}`}
       style={{
-        // Edge color of mock art — fills any subpixel gaps under the photo
         backgroundColor: isPromo ? '#026a3e' : '#f3faf2',
       }}
     >
@@ -76,39 +75,76 @@ export default function HomeBanners({ banners }: { banners: HomeBanner[] }) {
     () => banners.filter((b) => b.active).sort((a, b) => a.sort - b.sort),
     [banners]
   )
-  const promos = list.filter((b) => b.kind === 'promo')
+  // Mobile slider: all active banners (promo + consult) like the mock carousel
+  const slides = list
+  const scroller = useRef<HTMLDivElement>(null)
   const [idx, setIdx] = useState(0)
-  const mobileSlides = promos.length ? promos : list
+
+  const syncIndex = useCallback(() => {
+    const el = scroller.current
+    if (!el || !slides.length) return
+    const slideW = el.clientWidth * 0.88 + 10 // card width + gap approx
+    const next = Math.round(el.scrollLeft / Math.max(slideW, 1))
+    setIdx(Math.max(0, Math.min(slides.length - 1, next)))
+  }, [slides.length])
+
+  useEffect(() => {
+    const el = scroller.current
+    if (!el) return
+    syncIndex()
+    el.addEventListener('scroll', syncIndex, { passive: true })
+    return () => el.removeEventListener('scroll', syncIndex)
+  }, [syncIndex])
+
+  function goTo(i: number) {
+    const el = scroller.current
+    if (!el) return
+    const card = el.querySelector<HTMLElement>(`[data-slide="${i}"]`)
+    card?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' })
+    setIdx(i)
+  }
 
   if (!list.length) return null
 
   return (
     <section id="promos" className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-3">
+      {/* Desktop: two side-by-side */}
       <div className="hidden md:grid md:grid-cols-2 gap-3">
         {list.map((b) => (
           <BannerCard key={b.id} b={b} />
         ))}
       </div>
 
-      <div className="md:hidden space-y-3">
-        {mobileSlides.length > 0 && (
-          <div>
-            <BannerCard b={mobileSlides[idx % mobileSlides.length]} compact />
-            {mobileSlides.length > 1 && (
-              <div className="mt-2 flex justify-center gap-1.5">
-                {mobileSlides.map((s, i) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    aria-label={`Слайд ${i + 1}`}
-                    onClick={() => setIdx(i)}
-                    className={`h-1.5 rounded-full transition ${
-                      i === idx % mobileSlides.length ? 'w-4 bg-[#22c55e]' : 'w-1.5 bg-[#d1d5db]'
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
+      {/* Mobile: swipe slider with peek of next slide + dots */}
+      <div className="md:hidden">
+        <div
+          ref={scroller}
+          className="flex gap-2.5 overflow-x-auto no-scrollbar snap-x snap-mandatory -mx-4 px-4 pb-1"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
+          {slides.map((b, i) => (
+            <div
+              key={b.id}
+              data-slide={i}
+              className="snap-start shrink-0 w-[88%] last:mr-4"
+            >
+              <BannerCard b={b} compact />
+            </div>
+          ))}
+        </div>
+        {slides.length > 1 && (
+          <div className="mt-2.5 flex justify-center gap-1.5">
+            {slides.map((s, i) => (
+              <button
+                key={s.id}
+                type="button"
+                aria-label={`Слайд ${i + 1}`}
+                onClick={() => goTo(i)}
+                className={`h-1.5 rounded-full transition ${
+                  i === idx ? 'w-4 bg-[#22c55e]' : 'w-1.5 bg-[#d1d5db]'
+                }`}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -116,14 +152,12 @@ export default function HomeBanners({ banners }: { banners: HomeBanner[] }) {
   )
 }
 
+/** Kept for backwards imports; consult is now part of the mobile slider. */
 export function HomeConsultBanner({ banners }: { banners: HomeBanner[] }) {
   const consult = banners
     .filter((b) => b.active && b.kind !== 'promo')
     .sort((a, b) => a.sort - b.sort)[0]
   if (!consult) return null
-  return (
-    <section className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-2 md:hidden">
-      <BannerCard b={consult} compact />
-    </section>
-  )
+  // Desktop already shows consult in the 2-col grid; mobile uses the slider above.
+  return null
 }
