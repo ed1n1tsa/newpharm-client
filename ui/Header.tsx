@@ -3,13 +3,34 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { FormEvent, useEffect, useState } from 'react'
-import { ChevronDown, Heart, MapPin, Menu, Search, ShoppingCart, User, X } from 'lucide-react'
+import { FormEvent, useEffect, useState, type ComponentType } from 'react'
+import { createPortal } from 'react-dom'
+import {
+  ChevronDown,
+  ChevronRight,
+  Heart,
+  HelpCircle,
+  Home,
+  Info,
+  LayoutGrid,
+  MapPin,
+  Menu,
+  Newspaper,
+  Package,
+  Phone,
+  Search,
+  ShoppingCart,
+  Stethoscope,
+  Tag,
+  User,
+  X,
+} from 'lucide-react'
 import { useCart } from './CartContext'
 import { supabase } from '@/lib/supabase-browser'
 import { useCity } from './CityProvider'
+import { HOME_CATEGORIES } from './home/HomeCategories'
 
-const NAV = [
+const DESKTOP_NAV = [
   { href: '/', label: 'Главная' },
   { href: '/catalog', label: 'Каталог' },
   { href: '/doctors', label: 'Врачи' },
@@ -17,6 +38,15 @@ const NAV = [
   { href: '/#promos', label: 'Акции' },
   { href: '/#news', label: 'Новости' },
 ]
+
+type DrawerItem = {
+  href: string
+  label: string
+  icon: ComponentType<{ size?: number; className?: string }>
+  badge?: number
+  chevron?: boolean
+  activeMatch?: string
+}
 
 export default function Header() {
   const pathname = usePathname()
@@ -29,6 +59,8 @@ export default function Header() {
   const [cityOpen, setCityOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [catalogOpen, setCatalogOpen] = useState(false)
+  const [drawerCityOpen, setDrawerCityOpen] = useState(false)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setLoggedIn(!!data.user))
@@ -38,9 +70,26 @@ export default function Header() {
     return () => sub.subscription.unsubscribe()
   }, [])
 
+  useEffect(() => {
+    if (!menuOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [menuOpen])
+
+  useEffect(() => {
+    setMenuOpen(false)
+    setCatalogOpen(false)
+    setDrawerCityOpen(false)
+  }, [pathname])
+
   const catalogHref = loggedIn || isClientArea ? '/client/products' : '/catalog'
   const authHref = loggedIn ? '/client/profile' : '/login'
   const authLabel = loggedIn ? 'Профиль' : 'Войти'
+  const ordersHref = loggedIn ? '/client/orders' : '/login'
+  const favoritesHref = loggedIn ? '/client/profile' : '/login'
 
   function onSearch(e: FormEvent) {
     e.preventDefault()
@@ -61,6 +110,272 @@ export default function Header() {
     if (href === '/catalog') return catalogHref
     return href
   }
+
+  function isActive(href: string, activeMatch?: string) {
+    const match = activeMatch || href.split('#')[0] || '/'
+    if (match === '/') return pathname === '/'
+    return pathname === match || pathname.startsWith(match + '/')
+  }
+
+  const mainNav: DrawerItem[] = [
+    { href: '/', label: 'Главная', icon: Home },
+    {
+      href: catalogHref,
+      label: 'Каталог товаров',
+      icon: LayoutGrid,
+      chevron: true,
+      activeMatch: loggedIn || isClientArea ? '/client/products' : '/catalog',
+    },
+    { href: '/doctors', label: 'Врачи и консультации', icon: Stethoscope },
+    { href: '/branches', label: 'Филиалы и аптеки', icon: MapPin },
+    { href: '/#promos', label: 'Акции', icon: Tag, activeMatch: '/__none__' },
+    { href: '/#news', label: 'Новости', icon: Newspaper, activeMatch: '/__none__' },
+  ]
+
+  const accountNav: DrawerItem[] = [
+    { href: favoritesHref, label: 'Избранное', icon: Heart },
+    { href: '/cart', label: 'Корзина', icon: ShoppingCart, badge: count },
+    { href: ordersHref, label: 'Мои заказы', icon: Package },
+  ]
+
+  const infoNav: DrawerItem[] = [
+    { href: '/client/faq', label: 'Помощь и FAQs', icon: HelpCircle },
+    { href: '/branches', label: 'Контакты', icon: Phone, activeMatch: '/__none__' },
+    { href: '/', label: 'О компании', icon: Info, activeMatch: '/__none__' },
+  ]
+
+  function DrawerLink({
+    item,
+    onClick,
+  }: {
+    item: DrawerItem
+    onClick?: () => void
+  }) {
+    const Icon = item.icon
+    const active = isActive(item.href, item.activeMatch)
+    return (
+      <Link
+        href={item.href}
+        onClick={onClick}
+        className={`relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[14px] transition ${
+          active
+            ? 'bg-[#e8f8ee] text-[#166534] font-semibold'
+            : 'text-[#111827] hover:bg-slate-50'
+        }`}
+      >
+        <Icon size={18} className={active ? 'text-[#16a34a]' : 'text-slate-500'} />
+        <span className="flex-1 min-w-0">{item.label}</span>
+        {typeof item.badge === 'number' && item.badge > 0 && (
+          <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-[#22c55e] text-white text-[11px] font-bold flex items-center justify-center">
+            {item.badge > 99 ? '99+' : item.badge}
+          </span>
+        )}
+        {item.chevron && <ChevronRight size={16} className="text-slate-400" />}
+      </Link>
+    )
+  }
+
+  const drawer =
+    menuOpen &&
+    typeof document !== 'undefined' &&
+    createPortal(
+      <div className="fixed inset-0 z-[80] lg:hidden">
+        <button
+          type="button"
+          className="absolute inset-0 bg-black/40"
+          aria-label="Закрыть меню"
+          onClick={() => setMenuOpen(false)}
+        />
+        <aside className="absolute left-0 top-0 h-full w-[86%] max-w-[340px] bg-white shadow-2xl flex flex-col">
+          <div className="flex items-center justify-between px-4 pt-4 pb-3">
+            <Link
+              href="/"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-2"
+            >
+              <Image
+                src="/logo.png"
+                alt="NewPharm"
+                width={30}
+                height={30}
+                className="object-contain"
+              />
+              <span className="text-[16px] font-bold text-[#16a34a]">NewPharm</span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => setMenuOpen(false)}
+              aria-label="Закрыть"
+              className="grid place-items-center h-9 w-9 rounded-full bg-slate-100 text-slate-600"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-3 pb-4">
+            {!loggedIn && (
+              <div className="mb-3 rounded-2xl bg-[#e8f8ee] px-3.5 py-3.5">
+                <div className="flex items-start gap-2.5">
+                  <span className="grid place-items-center h-9 w-9 rounded-full bg-white text-[#16a34a] shrink-0">
+                    <User size={18} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-bold text-[#111827]">Войдите в аккаунт</p>
+                    <p className="mt-0.5 text-[11px] leading-snug text-[#6b7280]">
+                      Отслеживайте заказы, сохраняйте избранное и получайте акции
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="mt-3 flex items-center justify-center rounded-full bg-[#22c55e] hover:bg-[#16a34a] text-white text-[13px] font-semibold py-2.5 transition"
+                >
+                  Войти
+                </Link>
+              </div>
+            )}
+
+            {loggedIn && (
+              <Link
+                href="/client/profile"
+                onClick={() => setMenuOpen(false)}
+                className="mb-3 flex items-center gap-2.5 rounded-2xl bg-[#e8f8ee] px-3.5 py-3"
+              >
+                <span className="grid place-items-center h-9 w-9 rounded-full bg-white text-[#16a34a]">
+                  <User size={18} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[14px] font-bold text-[#111827]">Мой профиль</p>
+                  <p className="text-[11px] text-[#6b7280]">Заказы, избранное, настройки</p>
+                </div>
+                <ChevronRight size={16} className="ml-auto text-slate-400" />
+              </Link>
+            )}
+
+            <nav className="space-y-0.5">
+              {mainNav.map((item) => {
+                if (item.chevron) {
+                  const Icon = item.icon
+                  const active = isActive(item.href, item.activeMatch)
+                  return (
+                    <div key={item.label}>
+                      <button
+                        type="button"
+                        onClick={() => setCatalogOpen((v) => !v)}
+                        className={`w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[14px] transition ${
+                          active
+                            ? 'bg-[#e8f8ee] text-[#166534] font-semibold'
+                            : 'text-[#111827] hover:bg-slate-50'
+                        }`}
+                      >
+                        <Icon size={18} className={active ? 'text-[#16a34a]' : 'text-slate-500'} />
+                        <span className="flex-1 text-left">{item.label}</span>
+                        <ChevronRight
+                          size={16}
+                          className={`text-slate-400 transition ${catalogOpen ? 'rotate-90' : ''}`}
+                        />
+                      </button>
+                      {catalogOpen && (
+                        <div className="ml-4 mt-0.5 mb-1 space-y-0.5 border-l border-[#e8f8ee] pl-2">
+                          <Link
+                            href={catalogHref}
+                            onClick={() => setMenuOpen(false)}
+                            className="block rounded-xl px-3 py-2 text-[13px] text-slate-700 hover:bg-emerald-50"
+                          >
+                            Все товары
+                          </Link>
+                          {HOME_CATEGORIES.map((c) => (
+                            <Link
+                              key={c.key}
+                              href={
+                                loggedIn || isClientArea
+                                  ? c.href.replace('/catalog', '/client/products')
+                                  : c.href
+                              }
+                              onClick={() => setMenuOpen(false)}
+                              className="block rounded-xl px-3 py-2 text-[13px] text-slate-700 hover:bg-emerald-50"
+                            >
+                              {c.title}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                }
+                return (
+                  <DrawerLink
+                    key={item.label}
+                    item={item}
+                    onClick={() => setMenuOpen(false)}
+                  />
+                )
+              })}
+            </nav>
+
+            <div className="my-3 h-px bg-[#eef2f6]" />
+
+            <nav className="space-y-0.5">
+              {accountNav.map((item) => (
+                <DrawerLink
+                  key={item.label}
+                  item={item}
+                  onClick={() => setMenuOpen(false)}
+                />
+              ))}
+            </nav>
+
+            <div className="my-3 h-px bg-[#eef2f6]" />
+
+            <nav className="space-y-0.5">
+              {infoNav.map((item) => (
+                <DrawerLink
+                  key={item.label}
+                  item={item}
+                  onClick={() => setMenuOpen(false)}
+                />
+              ))}
+            </nav>
+          </div>
+
+          <div className="border-t border-[#eef2f6] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setDrawerCityOpen((v) => !v)}
+                className="w-full inline-flex items-center gap-2 rounded-full border border-[#d1fae5] bg-[#f0fdf4] px-3.5 py-2.5 text-[13px] text-[#166534]"
+              >
+                <MapPin size={14} className="text-[#16a34a]" />
+                <span className="flex-1 text-left font-medium">{city.name}</span>
+                <ChevronDown size={14} className={drawerCityOpen ? 'rotate-180' : ''} />
+              </button>
+              {drawerCityOpen && (
+                <ul className="absolute bottom-full left-0 right-0 mb-1.5 max-h-48 overflow-y-auto rounded-2xl border border-slate-100 bg-white py-1.5 shadow-lg">
+                  {cities.map((c) => (
+                    <li key={c.id}>
+                      <button
+                        type="button"
+                        className={`w-full px-3.5 py-2 text-left text-[13px] hover:bg-emerald-50 ${
+                          c.id === city.id ? 'text-emerald-700 font-semibold' : 'text-slate-700'
+                        }`}
+                        onClick={() => {
+                          setCityId(c.id)
+                          setDrawerCityOpen(false)
+                        }}
+                      >
+                        {c.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </aside>
+      </div>,
+      document.body
+    )
 
   return (
     <header className="w-full bg-white sticky top-0 z-50 border-b border-[#f0f2f5]">
@@ -131,7 +446,7 @@ export default function Header() {
           </div>
 
           <nav className="hidden lg:flex items-center gap-0.5 text-[13px] font-medium text-slate-700 ml-1">
-            {NAV.map((item) => {
+            {DESKTOP_NAV.map((item) => {
               const href = navHref(item.href)
               const active =
                 item.href === '/'
@@ -163,7 +478,7 @@ export default function Header() {
               <Search size={17} />
             </button>
             <Link
-              href={authHref}
+              href={favoritesHref}
               className="p-1.5 rounded-full hover:bg-emerald-50"
               aria-label="Избранное"
             >
@@ -242,41 +557,7 @@ export default function Header() {
         )}
       </div>
 
-      {menuOpen && (
-        <div className="fixed inset-0 z-[60] lg:hidden">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/40"
-            aria-label="Закрыть меню"
-            onClick={() => setMenuOpen(false)}
-          />
-          <div className="absolute left-0 top-0 h-full w-[80%] max-w-xs bg-white shadow-xl p-4 flex flex-col gap-1">
-            <div className="flex items-center justify-between mb-3">
-              <span className="font-bold text-[#166534]">Меню</span>
-              <button type="button" onClick={() => setMenuOpen(false)} aria-label="Закрыть">
-                <X size={18} />
-              </button>
-            </div>
-            {NAV.map((item) => (
-              <Link
-                key={item.label}
-                href={navHref(item.href)}
-                onClick={() => setMenuOpen(false)}
-                className="rounded-xl px-3 py-2.5 text-[14px] text-slate-800 hover:bg-emerald-50"
-              >
-                {item.label}
-              </Link>
-            ))}
-            <Link
-              href={authHref}
-              onClick={() => setMenuOpen(false)}
-              className="mt-auto rounded-xl bg-emerald-500 text-white text-center py-2.5 font-semibold text-[14px]"
-            >
-              {authLabel}
-            </Link>
-          </div>
-        </div>
-      )}
+      {drawer}
     </header>
   )
 }
