@@ -53,7 +53,6 @@ export default function Header() {
   const { count } = useCart()
   const { openAuth } = useAuth()
   const { city, cities, setCityId } = useCity()
-  const isClientArea = pathname.startsWith('/client')
   const [loggedIn, setLoggedIn] = useState(false)
   const [cityOpen, setCityOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -85,11 +84,12 @@ export default function Header() {
     setDrawerCityOpen(false)
   }, [pathname])
 
-  const catalogHref = loggedIn || isClientArea ? '/client/products' : '/catalog'
-  const authHref = loggedIn ? '/client/profile' : '#'
+  // Public guest chrome always uses public routes (even when logged in)
+  const catalogHref = '/catalog'
+  const authHref = loggedIn ? '/profile' : '#'
   const authLabel = loggedIn ? 'Профиль' : 'Войти'
-  const ordersHref = loggedIn ? '/client/orders' : '#'
-  const favoritesHref = loggedIn ? '/client/profile' : '#'
+  const ordersHref = loggedIn ? '/orders' : '#'
+  const favoritesHref = loggedIn ? '/profile' : '#'
 
   function requireAuth(e?: React.MouseEvent) {
     e?.preventDefault()
@@ -115,7 +115,7 @@ export default function Header() {
       label: 'Каталог товаров',
       icon: LayoutGrid,
       chevron: true,
-      activeMatch: loggedIn || isClientArea ? '/client/products' : '/catalog',
+      activeMatch: '/catalog',
     },
     { href: '/doctors', label: 'Врачи и консультации', icon: Stethoscope },
     { href: '/branches', label: 'Филиалы и аптеки', icon: MapPin },
@@ -130,7 +130,7 @@ export default function Header() {
   ]
 
   const infoNav: DrawerItem[] = [
-    { href: '/client/faq', label: 'Помощь и FAQs', icon: HelpCircle },
+    { href: '/#faq', label: 'Помощь и FAQs', icon: HelpCircle },
     { href: '/branches', label: 'Контакты', icon: Phone, activeMatch: '/__none__' },
     { href: '/', label: 'О компании', icon: Info, activeMatch: '/__none__' },
   ]
@@ -247,7 +247,7 @@ export default function Header() {
 
             {loggedIn && (
               <Link
-                href="/client/profile"
+                href="/profile"
                 onClick={() => setMenuOpen(false)}
                 className="mb-3 flex items-center gap-2.5 rounded-2xl bg-[#e8f8ee] px-3.5 py-3"
               >
@@ -297,11 +297,7 @@ export default function Header() {
                           {HOME_CATEGORIES.map((c) => (
                             <Link
                               key={c.key}
-                              href={
-                                loggedIn || isClientArea
-                                  ? c.href.replace('/catalog', '/client/products')
-                                  : c.href
-                              }
+                              href={c.href}
                               onClick={() => setMenuOpen(false)}
                               className="block rounded-xl px-3 py-2 text-[13px] text-slate-700 hover:bg-emerald-50"
                             >

@@ -40,7 +40,7 @@ export default function GuestHome({
       .catch(() => {})
   }, [])
 
-  const catalogHref = loggedIn ? '/client/products' : '/catalog'
+  const catalogHref = '/catalog'
 
   return (
     <div className="guest-page bg-white">

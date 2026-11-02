@@ -20,10 +20,9 @@ export default function MobileNav() {
     return () => sub.subscription.unsubscribe()
   }, [])
 
-  const catalogHref = loggedIn ? '/client/products' : '/catalog'
   const navItems = [
     { href: '/', label: 'Главная', icon: Home },
-    { href: catalogHref, label: 'Каталог', icon: LayoutGrid },
+    { href: '/catalog', label: 'Каталог', icon: LayoutGrid },
     { href: '/doctors', label: 'Врачи', icon: Stethoscope },
     { href: '/#promos', label: 'Акции', icon: Tag },
   ]
@@ -59,12 +58,12 @@ export default function MobileNav() {
 
         {loggedIn ? (
           <Link
-            href="/client/profile"
+            href="/profile"
             className="relative flex flex-col items-center gap-0.5 text-[10px] min-w-[56px]"
           >
             <span
               className={`grid place-items-center h-7 w-7 rounded-full ${
-                pathname.startsWith('/client/profile')
+                pathname.startsWith('/profile')
                   ? 'bg-[#e8f8ee] text-[#16a34a]'
                   : 'text-slate-400'
               }`}
@@ -73,7 +72,7 @@ export default function MobileNav() {
             </span>
             <span
               className={
-                pathname.startsWith('/client/profile')
+                pathname.startsWith('/profile')
                   ? 'text-[#16a34a] font-semibold'
                   : 'text-slate-500'
               }

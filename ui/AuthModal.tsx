@@ -145,7 +145,7 @@ export default function AuthModal() {
       if (sessErr) throw sessErr
 
       closeAuth()
-      router.push('/client/profile')
+      // Stay on the public site — no /client portal redirect
       router.refresh()
     } catch (err: any) {
       setError(err?.message || 'Ошибка подтверждения')
@@ -368,7 +368,7 @@ export default function AuthModal() {
               <p className="text-[11px] leading-snug text-[#9ca3af]">
                 Регистрируясь, вы соглашаетесь с{' '}
                 <Link
-                  href="/client/faq"
+                  href="/#faq"
                   className="text-emerald-600 underline"
                   onClick={closeAuth}
                 >
@@ -376,7 +376,7 @@ export default function AuthModal() {
                 </Link>{' '}
                 и{' '}
                 <Link
-                  href="/client/faq"
+                  href="/#faq"
                   className="text-emerald-600 underline"
                   onClick={closeAuth}
                 >

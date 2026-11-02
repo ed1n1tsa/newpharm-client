@@ -24,7 +24,7 @@ export default function Footer() {
             <li><Link href="/catalog" className="hover:text-white">Как сделать заказ</Link></li>
             <li><Link href="/cart" className="hover:text-white">Оплата и возврат</Link></li>
             <li><Link href="/branches" className="hover:text-white">Доставка и самовывоз</Link></li>
-            <li><Link href="/client/faq" className="hover:text-white">FAQ</Link></li>
+            <li><Link href="/#faq" className="hover:text-white">FAQ</Link></li>
           </ul>
         </div>
 

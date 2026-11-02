@@ -1,14 +1,21 @@
-'use client';
+'use client'
 
-import Image from 'next/image';
-import { motion } from 'framer-motion';
+import Image from 'next/image'
+import Link from 'next/link'
+import { useState } from 'react'
+import { HelpCircle, LogOut, MessageCircle } from 'lucide-react'
+import { supabase } from '@/lib/supabase-browser'
+import { phoneToWhatsAppLink } from '@/lib/phone'
+import { useAuth } from '@/ui/AuthContext'
 
 type Props = {
-  fullName: string;
-  email: string;
-  phone: string;
-  registeredAt: string;
-};
+  fullName: string
+  email: string
+  phone: string
+  registeredAt: string
+}
+
+const SUPPORT_WA = '77759849959'
 
 export default function ProfileClient({
   fullName,
@@ -16,49 +23,236 @@ export default function ProfileClient({
   phone,
   registeredAt,
 }: Props) {
+  const [editing, setEditing] = useState(false)
+  const [name, setName] = useState(fullName)
+  const [newPhone, setNewPhone] = useState(phone === '—' ? '' : phone)
+  const [newEmail, setNewEmail] = useState(email === '—' ? '' : email)
+  const [newPassword, setNewPassword] = useState('')
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleSave = async () => {
+    setLoading(true)
+    setMessage('')
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      setMessage('Пользователь не найден.')
+      setLoading(false)
+      return
+    }
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ full_name: name, phone: newPhone })
+      .eq('id', user.id)
+
+    if (updateError) {
+      setMessage('Ошибка при сохранении профиля.')
+      setLoading(false)
+      return
+    }
+
+    if (newEmail && newEmail !== user.email) {
+      const { error: emailError } = await supabase.auth.updateUser({
+        email: newEmail,
+      })
+      if (emailError) {
+        setMessage('Ошибка при обновлении email: ' + emailError.message)
+        setLoading(false)
+        return
+      }
+    }
+
+    if (newPassword.trim().length >= 6) {
+      const { error: passError } = await supabase.auth.updateUser({
+        password: newPassword,
+      })
+      if (passError) {
+        setMessage('Ошибка при обновлении пароля: ' + passError.message)
+        setLoading(false)
+        return
+      }
+    }
+
+    setEditing(false)
+    setLoading(false)
+    setMessage('Изменения сохранены')
+  }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    window.location.href = '/'
+  }
+
+  const whatsappUrl = phoneToWhatsAppLink(
+    SUPPORT_WA,
+    'Здравствуйте, пишу с сайта NewPharm'
+  )
+
   return (
-    <section className="min-h-screen bg-white text-[#001759] py-16 px-4">
-      <div className="max-w-xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="bg-slate-50 p-6 rounded-2xl shadow-md flex flex-col items-center text-center"
-        >
-          <div className="w-28 h-28 rounded-full overflow-hidden mb-4 border border-slate-200">
+    <section className="min-h-[70vh] bg-[#f9fafb] py-8 px-4 pb-24 md:pb-10">
+      <div className="max-w-md mx-auto space-y-4">
+        <div className="bg-white shadow-sm rounded-2xl p-4 flex items-center gap-4">
+          <div className="w-16 h-16 rounded-full overflow-hidden border border-gray-200 flex-shrink-0 bg-slate-100">
             <Image
-              src="/images/avatar.png"
+              src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(email || fullName)}`}
               alt="Аватар"
-              width={112}
-              height={112}
+              width={64}
+              height={64}
               className="object-cover w-full h-full"
+              unoptimized
             />
           </div>
-
-          <h1 className="text-2xl font-bold mb-1">{fullName}</h1>
-          <p className="text-sm text-slate-600 mb-4">{email}</p>
-
-          <div className="text-sm w-full text-left space-y-2">
-            <div>
-              <span className="font-semibold">📞 Телефон: </span>
-              {phone}
-            </div>
-            <div>
-              <span className="font-semibold">📅 Регистрация: </span>
-              {registeredAt}
-            </div>
+          <div className="min-w-0">
+            <h1 className="font-semibold text-gray-800 truncate">{fullName}</h1>
+            <p className="text-sm text-gray-500 truncate">{email}</p>
+            {registeredAt && (
+              <p className="text-xs text-gray-400 mt-0.5">с {registeredAt}</p>
+            )}
           </div>
+        </div>
 
-          <form action="/api/auth/signout" method="post">
+        {!editing ? (
+          <>
+            <div className="bg-white rounded-2xl shadow-sm divide-y text-gray-700">
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="block w-full text-left px-5 py-3.5 hover:bg-gray-50 transition"
+              >
+                Изменить данные
+              </button>
+
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-5 py-3.5 hover:bg-gray-50 transition"
+              >
+                <MessageCircle size={18} className="text-emerald-500" />
+                Служба поддержки (WhatsApp)
+              </a>
+
+              <Link
+                href="/#faq"
+                className="flex items-center gap-2 px-5 py-3.5 hover:bg-gray-50 transition"
+              >
+                <HelpCircle size={18} className="text-emerald-500" />
+                Часто задаваемые вопросы (FAQ)
+              </Link>
+
+              <Link
+                href="/orders"
+                className="block w-full text-left px-5 py-3.5 hover:bg-gray-50 transition"
+              >
+                Мои заказы
+              </Link>
+            </div>
+
+            {message && (
+              <p className="text-sm text-emerald-600 text-center">{message}</p>
+            )}
+
             <button
-              type="submit"
-              className="mt-6 px-5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold transition"
+              type="button"
+              onClick={handleLogout}
+              className="w-full mt-2 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-xl flex items-center justify-center gap-2 transition"
             >
+              <LogOut size={18} />
               Выйти
             </button>
-          </form>
-        </motion.div>
+          </>
+        ) : (
+          <div className="bg-white shadow-sm rounded-2xl p-5 space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Имя</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-emerald-400 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">Телефон</label>
+              <input
+                type="tel"
+                value={newPhone}
+                onChange={(e) => setNewPhone(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-emerald-400 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">Email</label>
+              <input
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-emerald-400 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">Новый пароль</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Оставьте пустым, если не меняете"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-emerald-400 outline-none"
+              />
+            </div>
+
+            {message && (
+              <p className="text-sm text-emerald-600 text-center">{message}</p>
+            )}
+
+            <div className="flex gap-3 mt-2">
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={loading}
+                className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium transition disabled:opacity-60"
+              >
+                {loading ? 'Сохранение…' : 'Сохранить'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditing(false)}
+                className="flex-1 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-medium transition"
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </section>
-  );
+  )
+}
+
+/** Shown when /profile is opened without a session — opens the auth modal. */
+export function ProfileAuthGate() {
+  const { openAuth } = useAuth()
+
+  return (
+    <section className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4 pb-24">
+      <h2 className="text-xl font-semibold mb-2 text-[#111827]">Вы не вошли в аккаунт</h2>
+      <p className="text-sm text-slate-500 mb-5 max-w-sm">
+        Войдите по номеру телефона, чтобы видеть профиль и заказы
+      </p>
+      <button
+        type="button"
+        onClick={() => openAuth('login')}
+        className="px-6 py-2.5 bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-full font-semibold transition"
+      >
+        Войти
+      </button>
+    </section>
+  )
 }

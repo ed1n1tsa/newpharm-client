@@ -273,7 +273,7 @@ export default function PublicCartPage() {
                 >
                   <div className="flex gap-4">
                     <Link
-                      href={`/client/products/${item.productId}`}
+                      href={`/ProductPage?id=${encodeURIComponent(item.productId)}`}
                       className="w-20 h-20 sm:w-24 sm:h-24 bg-slate-100 rounded-xl overflow-hidden shrink-0"
                     >
                       <Image
@@ -289,7 +289,7 @@ export default function PublicCartPage() {
                       <div className="flex gap-2 justify-between">
                         <div className="min-w-0">
                           <Link
-                            href={`/client/products/${item.productId}`}
+                            href={`/ProductPage?id=${encodeURIComponent(item.productId)}`}
                             className="font-medium text-slate-900 hover:text-emerald-700 line-clamp-2"
                           >
                             {item.name}

@@ -42,8 +42,8 @@ export default function RegisterPage() {
     // ⏳ ждём пока появится сессия
     await new Promise((r) => setTimeout(r, 800))
 
-    // 🎯 Переходим в профиль клиента
-    router.push('/client/profile')
+    // Stay on the public guest site after registration
+    router.push('/profile')
     router.refresh()
     setLoading(false)
   }

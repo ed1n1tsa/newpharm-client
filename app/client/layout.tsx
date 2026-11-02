@@ -22,8 +22,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   async function handleLogout() {
     await supabase.auth.signOut()
-    window.location.href = '/login'
+    window.location.href = '/'
   }
+
 
   return (
     <div className="client-dashboard min-h-screen flex bg-[#f7f8f9] text-gray-800 relative">
@@ -84,10 +85,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             </>
           ) : (
             <Link
-              href="/login"
+              href="/"
               className="text-emerald-600 hover:text-emerald-700 font-semibold transition"
             >
-              Войти
+              На главную
             </Link>
           )}
         </div>

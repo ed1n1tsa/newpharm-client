@@ -287,13 +287,13 @@ export default function CheckoutContent() {
             </p>
           )}
           <Link
-            href="/client/orders"
+            href="/orders"
             className="rounded-xl bg-emerald-700 text-white px-5 py-2.5 font-semibold"
           >
             Мои заказы
           </Link>
           <Link
-            href="/client/products"
+            href="/catalog"
             className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 font-semibold"
           >
             В каталог
@@ -308,7 +308,7 @@ export default function CheckoutContent() {
       <main className="max-w-xl mx-auto px-4 py-16 text-center bg-[#f6f7f8] min-h-[60vh]">
         <h1 className="text-2xl font-bold mb-3">Нечего оформлять</h1>
         <p className="text-slate-500 mb-6">Добавьте товары в корзину</p>
-        <Link href="/client/products" className="text-emerald-700 font-semibold">
+        <Link href="/catalog" className="text-emerald-700 font-semibold">
           Перейти в каталог
         </Link>
       </main>
