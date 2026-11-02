@@ -44,11 +44,11 @@ export default function HomeHero({ catalogHref }: { catalogHref: string }) {
   }
 
   return (
-    <section className="relative bg-white">
-      <div className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 md:pt-7 pb-3 md:pb-5">
+    <section className="relative overflow-visible bg-white">
+      <div className="relative overflow-visible max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 md:pt-7 pb-3 md:pb-5">
         {/* Title + illustration */}
-        <div className="grid grid-cols-[1fr_auto] lg:grid-cols-[1fr_1fr] gap-3 lg:gap-8 items-center">
-          <div className="min-w-0">
+        <div className="relative grid grid-cols-[1fr_auto] lg:grid-cols-[1fr_580px] xl:grid-cols-[1fr_620px] gap-3 lg:gap-6 items-start lg:min-h-[300px] xl:min-h-[340px]">
+          <div className="min-w-0 lg:pt-1">
             <h1 className="text-[22px] leading-[1.2] sm:text-[28px] lg:text-[34px] lg:leading-[1.18] font-extrabold text-[#111827] tracking-[-0.02em] max-w-[18ch] lg:max-w-[16ch]">
               Лекарства, товары для здоровья в одном месте
             </h1>
@@ -57,14 +57,33 @@ export default function HomeHero({ catalogHref }: { catalogHref: string }) {
             </p>
           </div>
 
-          <div className="relative overflow-hidden w-[158px] sm:w-[220px] lg:w-full lg:max-w-[520px] lg:justify-self-end flex items-center justify-center -mr-1 lg:-mr-2">
+          {/* Mobile / tablet: inline image */}
+          <div className="relative w-[158px] sm:w-[220px] lg:hidden">
             <Image
               src="/home/hero-bottles.png"
               alt="Лекарства NewPharm"
               width={1373}
               height={756}
               priority
-              className="relative z-[1] w-full h-auto object-contain scale-[1.08] lg:scale-[1.12] origin-center"
+              className="block w-full h-auto object-contain select-none pointer-events-none"
+              unoptimized
+            />
+          </div>
+
+          {/*
+            Desktop: full PNG, object-contain, no overflow/scale crop.
+            Flush to the right of the content column and raised so the bottle
+            balances the headline (PNG has ~60px transparent top padding).
+          */}
+          <div className="pointer-events-none absolute hidden lg:block top-0 right-0 w-[580px] xl:w-[620px] -translate-y-10 xl:-translate-y-12 translate-x-5 xl:translate-x-8">
+            <Image
+              src="/home/hero-bottles.png"
+              alt="Лекарства NewPharm"
+              width={1373}
+              height={756}
+              priority
+              sizes="600px"
+              className="block w-full h-auto object-contain select-none"
               unoptimized
             />
           </div>
