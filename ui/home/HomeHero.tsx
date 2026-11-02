@@ -43,30 +43,10 @@ export default function HomeHero({ catalogHref }: { catalogHref: string }) {
     router.push(`${catalogHref}?q=${encodeURIComponent(query)}`)
   }
 
-  const popularTags = (
-    <div className="flex flex-nowrap items-center gap-1.5 text-[12px] lg:text-[13px] overflow-x-auto no-scrollbar">
-      <span className="inline-flex items-center gap-1 text-[#9ca3af] shrink-0">
-        <Flame size={12} className="text-orange-500" />
-        Популярное:
-      </span>
-      {POPULAR.map((term, i) => (
-        <button
-          key={term}
-          type="button"
-          onClick={() => goSearch(term)}
-          className={`shrink-0 rounded-full bg-[#f3f4f6] hover:bg-[#e8f8ee] text-[#374151] px-2.5 py-1 transition ${
-            i >= 3 ? 'hidden sm:inline-flex' : 'inline-flex'
-          }`}
-        >
-          {term}
-        </button>
-      ))}
-    </div>
-  )
-
   return (
     <section className="relative bg-white">
       <div className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 md:pt-7 pb-3 md:pb-5">
+        {/* Title + illustration */}
         <div className="grid grid-cols-[1fr_auto] lg:grid-cols-[1fr_1fr] gap-3 lg:gap-8 items-center">
           <div className="min-w-0">
             <h1 className="text-[22px] leading-[1.2] sm:text-[28px] lg:text-[34px] lg:leading-[1.18] font-extrabold text-[#111827] tracking-[-0.02em] max-w-[18ch] lg:max-w-[16ch]">
@@ -75,11 +55,6 @@ export default function HomeHero({ catalogHref }: { catalogHref: string }) {
             <p className="mt-2 lg:mt-2.5 text-[13px] lg:text-[15px] text-[#6b7280] leading-snug max-w-[36ch] hidden sm:block">
               Найдите нужные лекарства, забронируйте в аптеке и получите консультацию врача
             </p>
-
-            <div className="hidden md:block mt-3 lg:mt-4 space-y-2.5 relative z-30">
-              <SearchBox catalogHref={catalogHref} className="max-w-xl" />
-              {popularTags}
-            </div>
           </div>
 
           <div className="relative overflow-hidden w-[158px] sm:w-[220px] lg:w-full lg:max-w-[520px] lg:justify-self-end flex items-center justify-center -mr-1 lg:-mr-2">
@@ -95,11 +70,30 @@ export default function HomeHero({ catalogHref }: { catalogHref: string }) {
           </div>
         </div>
 
-        <div className="md:hidden mt-3 space-y-2.5 relative z-30">
+        {/* One search for all breakpoints — avoids mobile duplicate */}
+        <div className="relative z-30 mt-3 lg:mt-4 space-y-2.5 max-w-xl">
           <SearchBox catalogHref={catalogHref} />
-          {popularTags}
+          <div className="flex flex-nowrap items-center gap-1.5 text-[12px] lg:text-[13px] overflow-x-auto no-scrollbar">
+            <span className="inline-flex items-center gap-1 text-[#9ca3af] shrink-0">
+              <Flame size={12} className="text-orange-500" />
+              Популярное:
+            </span>
+            {POPULAR.map((term, i) => (
+              <button
+                key={term}
+                type="button"
+                onClick={() => goSearch(term)}
+                className={`shrink-0 rounded-full bg-[#f3f4f6] hover:bg-[#e8f8ee] text-[#374151] px-2.5 py-1 transition ${
+                  i >= 3 ? 'hidden sm:inline-flex' : 'inline-flex'
+                }`}
+              >
+                {term}
+              </button>
+            ))}
+          </div>
         </div>
 
+        {/* Desktop USP */}
         <div className="mt-6 lg:mt-8 hidden md:grid grid-cols-4 gap-6 lg:gap-8">
           {USPS.map((u) => (
             <div key={u.title} className="flex items-start gap-2.5">
@@ -114,6 +108,7 @@ export default function HomeHero({ catalogHref }: { catalogHref: string }) {
           ))}
         </div>
 
+        {/* Mobile USP */}
         <div className="mt-4 grid grid-cols-4 gap-1.5 md:hidden">
           {USPS.map((u) => (
             <div
