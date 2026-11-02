@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import { useEffect, useState, type ComponentType } from 'react'
 import { createPortal } from 'react-dom'
-import SearchBox from '@/ui/SearchBox'
 import {
   ChevronDown,
   ChevronRight,
@@ -19,7 +18,6 @@ import {
   Newspaper,
   Package,
   Phone,
-  Search,
   ShoppingCart,
   Stethoscope,
   Tag,
