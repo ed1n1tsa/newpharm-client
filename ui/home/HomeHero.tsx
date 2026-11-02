@@ -46,36 +46,56 @@ export default function HomeHero({ catalogHref }: { catalogHref: string }) {
   return (
     <section className="relative overflow-visible bg-white">
       <div className="relative overflow-visible max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 md:pt-7 pb-3 md:pb-5">
-        {/* Title + illustration */}
-        <div className="relative grid grid-cols-[1fr_auto] lg:grid-cols-[1fr_580px] xl:grid-cols-[1fr_620px] gap-3 lg:gap-6 items-start lg:min-h-[300px] xl:min-h-[340px]">
-          <div className="min-w-0 lg:pt-1">
-            <h1 className="text-[22px] leading-[1.2] sm:text-[28px] lg:text-[34px] lg:leading-[1.18] font-extrabold text-[#111827] tracking-[-0.02em] max-w-[18ch] lg:max-w-[16ch]">
-              Лекарства, товары для здоровья в одном месте
-            </h1>
-            <p className="mt-2 lg:mt-2.5 text-[13px] lg:text-[15px] text-[#6b7280] leading-snug max-w-[36ch] hidden sm:block">
-              Найдите нужные лекарства, забронируйте в аптеке и получите консультацию врача
-            </p>
+        <div className="relative">
+          {/* Title + mobile image — no min-height so search stays under the headline */}
+          <div className="grid grid-cols-[1fr_auto] gap-3 items-start">
+            <div className="min-w-0 lg:max-w-xl lg:pt-1">
+              <h1 className="text-[22px] leading-[1.2] sm:text-[28px] lg:text-[34px] lg:leading-[1.18] font-extrabold text-[#111827] tracking-[-0.02em] max-w-[18ch] lg:max-w-[16ch]">
+                Лекарства, товары для здоровья в одном месте
+              </h1>
+              <p className="mt-2 lg:mt-2.5 text-[13px] lg:text-[15px] text-[#6b7280] leading-snug max-w-[36ch] hidden sm:block">
+                Найдите нужные лекарства, забронируйте в аптеке и получите консультацию врача
+              </p>
+            </div>
+
+            <div className="relative w-[158px] sm:w-[220px] lg:hidden">
+              <Image
+                src="/home/hero-bottles.png"
+                alt="Лекарства NewPharm"
+                width={1373}
+                height={756}
+                priority
+                className="block w-full h-auto object-contain select-none pointer-events-none"
+                unoptimized
+              />
+            </div>
           </div>
 
-          {/* Mobile / tablet: inline image */}
-          <div className="relative w-[158px] sm:w-[220px] lg:hidden">
-            <Image
-              src="/home/hero-bottles.png"
-              alt="Лекарства NewPharm"
-              width={1373}
-              height={756}
-              priority
-              className="block w-full h-auto object-contain select-none pointer-events-none"
-              unoptimized
-            />
+          {/* Search sits under the title (not below the tall illustration) */}
+          <div className="relative z-30 mt-3 lg:mt-4 space-y-2.5 max-w-xl">
+            <SearchBox catalogHref={catalogHref} />
+            <div className="flex flex-nowrap items-center gap-1.5 text-[12px] lg:text-[13px] overflow-x-auto no-scrollbar">
+              <span className="inline-flex items-center gap-1 text-[#9ca3af] shrink-0">
+                <Flame size={12} className="text-orange-500" />
+                Популярное:
+              </span>
+              {POPULAR.map((term, i) => (
+                <button
+                  key={term}
+                  type="button"
+                  onClick={() => goSearch(term)}
+                  className={`shrink-0 rounded-full bg-[#f3f4f6] hover:bg-[#e8f8ee] text-[#374151] px-2.5 py-1 transition ${
+                    i >= 3 ? 'hidden sm:inline-flex' : 'inline-flex'
+                  }`}
+                >
+                  {term}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/*
-            Desktop: full PNG, object-contain, no overflow/scale crop.
-            Flush to the right of the content column and raised so the bottle
-            balances the headline (PNG has ~60px transparent top padding).
-          */}
-          <div className="pointer-events-none absolute hidden lg:block top-0 right-0 w-[580px] xl:w-[620px] -translate-y-10 xl:-translate-y-12 translate-x-5 xl:translate-x-8">
+          {/* Desktop illustration: out of flow so it doesn't push search/USPs down */}
+          <div className="pointer-events-none absolute hidden lg:block top-0 right-0 w-[560px] xl:w-[600px] -translate-y-8 xl:-translate-y-10 translate-x-4 xl:translate-x-6">
             <Image
               src="/home/hero-bottles.png"
               alt="Лекарства NewPharm"
@@ -86,29 +106,6 @@ export default function HomeHero({ catalogHref }: { catalogHref: string }) {
               className="block w-full h-auto object-contain select-none"
               unoptimized
             />
-          </div>
-        </div>
-
-        {/* One search for all breakpoints — avoids mobile duplicate */}
-        <div className="relative z-30 mt-3 lg:mt-4 space-y-2.5 max-w-xl">
-          <SearchBox catalogHref={catalogHref} />
-          <div className="flex flex-nowrap items-center gap-1.5 text-[12px] lg:text-[13px] overflow-x-auto no-scrollbar">
-            <span className="inline-flex items-center gap-1 text-[#9ca3af] shrink-0">
-              <Flame size={12} className="text-orange-500" />
-              Популярное:
-            </span>
-            {POPULAR.map((term, i) => (
-              <button
-                key={term}
-                type="button"
-                onClick={() => goSearch(term)}
-                className={`shrink-0 rounded-full bg-[#f3f4f6] hover:bg-[#e8f8ee] text-[#374151] px-2.5 py-1 transition ${
-                  i >= 3 ? 'hidden sm:inline-flex' : 'inline-flex'
-                }`}
-              >
-                {term}
-              </button>
-            ))}
           </div>
         </div>
 
