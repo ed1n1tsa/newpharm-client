@@ -31,7 +31,15 @@ const USPS = [
   },
 ]
 
-export default function HomeHero({ catalogHref }: { catalogHref: string }) {
+export default function HomeHero({
+  catalogHref,
+  initialQuery = '',
+  showPopular = true,
+}: {
+  catalogHref: string
+  initialQuery?: string
+  showPopular?: boolean
+}) {
   const router = useRouter()
 
   function goSearch(term: string) {
@@ -73,25 +81,27 @@ export default function HomeHero({ catalogHref }: { catalogHref: string }) {
 
           {/* Search sits under the title (not below the tall illustration) */}
           <div className="relative z-30 mt-3 lg:mt-4 space-y-2.5 max-w-xl">
-            <SearchBox catalogHref={catalogHref} />
-            <div className="flex flex-nowrap items-center gap-1.5 text-[12px] lg:text-[13px] overflow-x-auto no-scrollbar">
-              <span className="inline-flex items-center gap-1 text-[#9ca3af] shrink-0">
-                <Flame size={12} className="text-orange-500" />
-                Популярное:
-              </span>
-              {POPULAR.map((term, i) => (
-                <button
-                  key={term}
-                  type="button"
-                  onClick={() => goSearch(term)}
-                  className={`shrink-0 rounded-full bg-[#f3f4f6] hover:bg-[#e8f8ee] text-[#374151] px-2.5 py-1 transition ${
-                    i >= 3 ? 'hidden sm:inline-flex' : 'inline-flex'
-                  }`}
-                >
-                  {term}
-                </button>
-              ))}
-            </div>
+            <SearchBox catalogHref={catalogHref} initialQuery={initialQuery} />
+            {showPopular && (
+              <div className="flex flex-nowrap items-center gap-1.5 text-[12px] lg:text-[13px] overflow-x-auto no-scrollbar">
+                <span className="inline-flex items-center gap-1 text-[#9ca3af] shrink-0">
+                  <Flame size={12} className="text-orange-500" />
+                  Популярное:
+                </span>
+                {POPULAR.map((term, i) => (
+                  <button
+                    key={term}
+                    type="button"
+                    onClick={() => goSearch(term)}
+                    className={`shrink-0 rounded-full bg-[#f3f4f6] hover:bg-[#e8f8ee] text-[#374151] px-2.5 py-1 transition ${
+                      i >= 3 ? 'hidden sm:inline-flex' : 'inline-flex'
+                    }`}
+                  >
+                    {term}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Desktop illustration: out of flow so it doesn't push search/USPs down */}

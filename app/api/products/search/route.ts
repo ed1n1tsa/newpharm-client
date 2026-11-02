@@ -1,21 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { products as mockProducts } from '@/lib/mockData'
+import { brandOf } from '@/lib/product-brand'
 
 export const dynamic = 'force-dynamic'
 
 function normalize(q: string) {
   return q.trim().replace(/\s+/g, ' ')
-}
-
-/** Soft brand line under the title — Latin brand prefix, else category. */
-function brandOf(name: string, category?: string | null) {
-  const m = name
-    .trim()
-    .match(/^([A-Za-z][A-Za-z0-9'’.\-]*(?:\s+[A-Za-z][A-Za-z0-9'’.\-]*){0,2})/)
-  if (m?.[1]) return m[1]
-  if (category?.trim()) return category.trim()
-  return ''
 }
 
 export async function GET(req: NextRequest) {

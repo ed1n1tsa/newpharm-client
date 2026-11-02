@@ -59,6 +59,10 @@ export default function SearchBox({
   const [items, setItems] = useState<SearchHit[]>([])
   const abortRef = useRef<AbortController | null>(null)
 
+  useEffect(() => {
+    setQ(initialQuery)
+  }, [initialQuery])
+
   const goAll = useCallback(
     (term?: string) => {
       const query = (term ?? q).trim()
