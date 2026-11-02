@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import Image from 'next/image'
-import { FormEvent, useEffect, useState, type ComponentType } from 'react'
+import { useEffect, useState, type ComponentType } from 'react'
 import { createPortal } from 'react-dom'
+import SearchBox from '@/ui/SearchBox'
 import {
   ChevronDown,
   ChevronRight,
@@ -50,11 +51,9 @@ type DrawerItem = {
 
 export default function Header() {
   const pathname = usePathname()
-  const router = useRouter()
   const { count } = useCart()
   const { city, cities, setCityId } = useCity()
   const isClientArea = pathname.startsWith('/client')
-  const [q, setQ] = useState('')
   const [loggedIn, setLoggedIn] = useState(false)
   const [cityOpen, setCityOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -92,21 +91,6 @@ export default function Header() {
   const authLabel = loggedIn ? 'Профиль' : 'Войти'
   const ordersHref = loggedIn ? '/client/orders' : '/login'
   const favoritesHref = loggedIn ? '/client/profile' : '/login'
-
-  function onSearch(e: FormEvent) {
-    e.preventDefault()
-    const query = q.trim()
-    setSearchOpen(false)
-    if (!query) {
-      router.push(catalogHref)
-      return
-    }
-    router.push(
-      loggedIn || isClientArea
-        ? `/client/products?q=${encodeURIComponent(query)}`
-        : `/catalog?q=${encodeURIComponent(query)}`
-    )
-  }
 
   function navHref(href: string) {
     if (href === '/catalog') return catalogHref
@@ -540,23 +524,14 @@ export default function Header() {
         </div>
 
         {searchOpen && (
-          <form onSubmit={onSearch} className="pb-2.5" role="search">
-            <div className="flex gap-2">
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                autoFocus
-                placeholder="Поиск лекарств, товаров, заболеваний…"
-                className="flex-1 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-[13px] outline-none focus:border-emerald-500 focus:bg-white"
-              />
-              <button
-                type="submit"
-                className="rounded-full bg-emerald-500 hover:bg-emerald-600 text-white px-4 text-[13px] font-semibold"
-              >
-                Найти
-              </button>
-            </div>
-          </form>
+          <div className="pb-2.5">
+            <SearchBox
+              catalogHref={catalogHref}
+              compact
+              autoFocus
+              onSubmitted={() => setSearchOpen(false)}
+            />
+          </div>
         )}
       </div>
 

@@ -1,10 +1,10 @@
 'use client'
 
 import Image from 'next/image'
-import { FormEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Flame } from 'lucide-react'
 import HomeIcon from './HomeIcon'
+import SearchBox from '@/ui/SearchBox'
 
 const POPULAR = ['Парацетамол', 'Витамин D', 'Омега-3', 'Ибупрофен']
 
@@ -33,42 +33,15 @@ const USPS = [
 
 export default function HomeHero({ catalogHref }: { catalogHref: string }) {
   const router = useRouter()
-  const [q, setQ] = useState('')
 
-  function goSearch(term?: string) {
-    const query = (term ?? q).trim()
+  function goSearch(term: string) {
+    const query = term.trim()
     if (!query) {
       router.push(catalogHref)
       return
     }
     router.push(`${catalogHref}?q=${encodeURIComponent(query)}`)
   }
-
-  function onSubmit(e: FormEvent) {
-    e.preventDefault()
-    goSearch()
-  }
-
-  const searchForm = (
-    <form
-      onSubmit={onSubmit}
-      className="flex items-center rounded-full bg-white border border-[#e5e7eb] shadow-[0_4px_18px_rgba(17,24,39,0.05)] overflow-hidden max-w-xl"
-      role="search"
-    >
-      <input
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Поиск лекарств, товаров, заболеваний…"
-        className="flex-1 px-4 lg:px-5 py-2.5 lg:py-3 text-[13px] lg:text-[14px] text-slate-800 placeholder:text-slate-400 outline-none min-w-0 bg-transparent"
-      />
-      <button
-        type="submit"
-        className="shrink-0 m-1 rounded-full bg-[#22c55e] hover:bg-[#16a34a] text-white px-4 lg:px-5 py-2 text-[13px] font-semibold transition"
-      >
-        Найти
-      </button>
-    </form>
-  )
 
   const popularTags = (
     <div className="flex flex-nowrap items-center gap-1.5 text-[12px] lg:text-[13px] overflow-x-auto no-scrollbar">
@@ -92,9 +65,8 @@ export default function HomeHero({ catalogHref }: { catalogHref: string }) {
   )
 
   return (
-    <section className="relative overflow-hidden bg-white">
+    <section className="relative bg-white">
       <div className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 md:pt-7 pb-3 md:pb-5">
-        {/* Title + illustration */}
         <div className="grid grid-cols-[1fr_auto] lg:grid-cols-[1fr_1fr] gap-3 lg:gap-8 items-center">
           <div className="min-w-0">
             <h1 className="text-[22px] leading-[1.2] sm:text-[28px] lg:text-[34px] lg:leading-[1.18] font-extrabold text-[#111827] tracking-[-0.02em] max-w-[18ch] lg:max-w-[16ch]">
@@ -104,14 +76,13 @@ export default function HomeHero({ catalogHref }: { catalogHref: string }) {
               Найдите нужные лекарства, забронируйте в аптеке и получите консультацию врача
             </p>
 
-            {/* Desktop: search + tags under title in left column */}
-            <div className="hidden md:block mt-3 lg:mt-4 space-y-2.5">
-              {searchForm}
+            <div className="hidden md:block mt-3 lg:mt-4 space-y-2.5 relative z-30">
+              <SearchBox catalogHref={catalogHref} className="max-w-xl" />
               {popularTags}
             </div>
           </div>
 
-          <div className="relative w-[158px] sm:w-[220px] lg:w-full lg:max-w-[520px] lg:justify-self-end flex items-center justify-center -mr-1 lg:-mr-2">
+          <div className="relative overflow-hidden w-[158px] sm:w-[220px] lg:w-full lg:max-w-[520px] lg:justify-self-end flex items-center justify-center -mr-1 lg:-mr-2">
             <Image
               src="/home/hero-bottles.png"
               alt="Лекарства NewPharm"
@@ -124,13 +95,11 @@ export default function HomeHero({ catalogHref }: { catalogHref: string }) {
           </div>
         </div>
 
-        {/* Mobile: full-width search + one-line popular tags (not squeezed by art) */}
-        <div className="md:hidden mt-3 space-y-2.5">
-          {searchForm}
+        <div className="md:hidden mt-3 space-y-2.5 relative z-30">
+          <SearchBox catalogHref={catalogHref} />
           {popularTags}
         </div>
 
-        {/* Desktop USP */}
         <div className="mt-6 lg:mt-8 hidden md:grid grid-cols-4 gap-6 lg:gap-8">
           {USPS.map((u) => (
             <div key={u.title} className="flex items-start gap-2.5">
@@ -145,7 +114,6 @@ export default function HomeHero({ catalogHref }: { catalogHref: string }) {
           ))}
         </div>
 
-        {/* Mobile USP */}
         <div className="mt-4 grid grid-cols-4 gap-1.5 md:hidden">
           {USPS.map((u) => (
             <div
