@@ -57,14 +57,14 @@ export default function HomeHero({ catalogHref }: { catalogHref: string }) {
             </p>
           </div>
 
-          <div className="relative w-[188px] sm:w-[280px] lg:w-full lg:max-w-[520px] lg:justify-self-end flex items-center justify-center">
+          <div className="relative overflow-hidden w-[158px] sm:w-[220px] lg:w-full lg:max-w-[520px] lg:justify-self-end flex items-center justify-center -mr-1 lg:-mr-2">
             <Image
               src="/home/hero-bottles.png"
               alt="Лекарства NewPharm"
-              width={1400}
-              height={1121}
+              width={1373}
+              height={756}
               priority
-              className="relative z-[1] w-full h-auto object-contain select-none"
+              className="relative z-[1] w-full h-auto object-contain scale-[1.08] lg:scale-[1.12] origin-center"
               unoptimized
             />
           </div>
