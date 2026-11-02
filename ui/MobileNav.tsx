@@ -5,9 +5,11 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Home, LayoutGrid, Stethoscope, Tag, User } from 'lucide-react'
 import { supabase } from '@/lib/supabase-browser'
+import { useAuth } from '@/ui/AuthContext'
 
 export default function MobileNav() {
   const pathname = usePathname()
+  const { openAuth } = useAuth()
   const [loggedIn, setLoggedIn] = useState(false)
 
   useEffect(() => {
@@ -24,11 +26,6 @@ export default function MobileNav() {
     { href: catalogHref, label: 'Каталог', icon: LayoutGrid },
     { href: '/doctors', label: 'Врачи', icon: Stethoscope },
     { href: '/#promos', label: 'Акции', icon: Tag },
-    {
-      href: loggedIn ? '/client/profile' : '/login',
-      label: loggedIn ? 'Профиль' : 'Войти',
-      icon: User,
-    },
   ]
 
   return (
@@ -59,6 +56,43 @@ export default function MobileNav() {
             </Link>
           )
         })}
+
+        {loggedIn ? (
+          <Link
+            href="/client/profile"
+            className="relative flex flex-col items-center gap-0.5 text-[10px] min-w-[56px]"
+          >
+            <span
+              className={`grid place-items-center h-7 w-7 rounded-full ${
+                pathname.startsWith('/client/profile')
+                  ? 'bg-[#e8f8ee] text-[#16a34a]'
+                  : 'text-slate-400'
+              }`}
+            >
+              <User size={18} />
+            </span>
+            <span
+              className={
+                pathname.startsWith('/client/profile')
+                  ? 'text-[#16a34a] font-semibold'
+                  : 'text-slate-500'
+              }
+            >
+              Профиль
+            </span>
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={() => openAuth('login')}
+            className="relative flex flex-col items-center gap-0.5 text-[10px] min-w-[56px]"
+          >
+            <span className="grid place-items-center h-7 w-7 rounded-full text-slate-400">
+              <User size={18} />
+            </span>
+            <span className="text-slate-500">Войти</span>
+          </button>
+        )}
       </div>
     </nav>
   )

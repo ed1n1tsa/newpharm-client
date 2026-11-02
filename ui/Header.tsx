@@ -25,6 +25,7 @@ import {
   X,
 } from 'lucide-react'
 import { useCart } from './CartContext'
+import { useAuth } from './AuthContext'
 import { supabase } from '@/lib/supabase-browser'
 import { useCity } from './CityProvider'
 import { HOME_CATEGORIES } from './home/HomeCategories'
@@ -50,6 +51,7 @@ type DrawerItem = {
 export default function Header() {
   const pathname = usePathname()
   const { count } = useCart()
+  const { openAuth } = useAuth()
   const { city, cities, setCityId } = useCity()
   const isClientArea = pathname.startsWith('/client')
   const [loggedIn, setLoggedIn] = useState(false)
@@ -84,10 +86,16 @@ export default function Header() {
   }, [pathname])
 
   const catalogHref = loggedIn || isClientArea ? '/client/products' : '/catalog'
-  const authHref = loggedIn ? '/client/profile' : '/login'
+  const authHref = loggedIn ? '/client/profile' : '#'
   const authLabel = loggedIn ? 'Профиль' : 'Войти'
-  const ordersHref = loggedIn ? '/client/orders' : '/login'
-  const favoritesHref = loggedIn ? '/client/profile' : '/login'
+  const ordersHref = loggedIn ? '/client/orders' : '#'
+  const favoritesHref = loggedIn ? '/client/profile' : '#'
+
+  function requireAuth(e?: React.MouseEvent) {
+    e?.preventDefault()
+    setMenuOpen(false)
+    openAuth('login')
+  }
 
   function navHref(href: string) {
     if (href === '/catalog') return catalogHref
@@ -135,24 +143,41 @@ export default function Header() {
     onClick?: () => void
   }) {
     const Icon = item.icon
-    const active = isActive(item.href, item.activeMatch)
-    return (
-      <Link
-        href={item.href}
-        onClick={onClick}
-        className={`relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[14px] transition ${
-          active
-            ? 'bg-[#e8f8ee] text-[#166534] font-semibold'
-            : 'text-[#111827] hover:bg-slate-50'
-        }`}
-      >
+    const needsAuth = !loggedIn && (item.href === '#' || item.href === '/login')
+    const active = !needsAuth && isActive(item.href, item.activeMatch)
+    const className = `relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[14px] transition ${
+      active
+        ? 'bg-[#e8f8ee] text-[#166534] font-semibold'
+        : 'text-[#111827] hover:bg-slate-50'
+    }`
+    const inner = (
+      <>
         <Icon size={18} className={active ? 'text-[#16a34a]' : 'text-slate-500'} />
-        <span className="flex-1 min-w-0">{item.label}</span>
+        <span className="flex-1 min-w-0 text-left">{item.label}</span>
         {typeof item.badge === 'number' && item.badge > 0 && (
           <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-[#22c55e] text-white text-[11px] font-bold flex items-center justify-center">
             {item.badge > 99 ? '99+' : item.badge}
           </span>
         )}
+      </>
+    )
+    if (needsAuth) {
+      return (
+        <button
+          type="button"
+          onClick={() => {
+            onClick?.()
+            requireAuth()
+          }}
+          className={`w-full ${className}`}
+        >
+          {inner}
+        </button>
+      )
+    }
+    return (
+      <Link href={item.href} onClick={onClick} className={className}>
+        {inner}
         {item.chevron && <ChevronRight size={16} className="text-slate-400" />}
       </Link>
     )
@@ -210,13 +235,13 @@ export default function Header() {
                     </p>
                   </div>
                 </div>
-                <Link
-                  href="/login"
-                  onClick={() => setMenuOpen(false)}
-                  className="mt-3 flex items-center justify-center rounded-full bg-[#22c55e] hover:bg-[#16a34a] text-white text-[13px] font-semibold py-2.5 transition"
+                <button
+                  type="button"
+                  onClick={() => requireAuth()}
+                  className="mt-3 w-full flex items-center justify-center rounded-full bg-[#22c55e] hover:bg-[#16a34a] text-white text-[13px] font-semibold py-2.5 transition"
                 >
                   Войти
-                </Link>
+                </button>
               </div>
             )}
 
@@ -453,13 +478,24 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-0.5 ml-auto text-slate-700">
-            <Link
-              href={favoritesHref}
-              className="p-1.5 rounded-full hover:bg-emerald-50"
-              aria-label="Избранное"
-            >
-              <Heart size={17} />
-            </Link>
+            {loggedIn ? (
+              <Link
+                href={favoritesHref}
+                className="p-1.5 rounded-full hover:bg-emerald-50"
+                aria-label="Избранное"
+              >
+                <Heart size={17} />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => openAuth('login')}
+                className="p-1.5 rounded-full hover:bg-emerald-50"
+                aria-label="Избранное"
+              >
+                <Heart size={17} />
+              </button>
+            )}
             <Link
               href="/cart"
               className="cart-icon relative p-1.5 rounded-full hover:bg-emerald-50"
@@ -472,13 +508,24 @@ export default function Header() {
                 </span>
               )}
             </Link>
-            <Link
-              href={authHref}
-              className="hidden md:inline-flex items-center gap-1 ml-1 rounded-full px-2.5 py-1 text-[13px] hover:bg-emerald-50"
-            >
-              <User size={15} />
-              {authLabel}
-            </Link>
+            {loggedIn ? (
+              <Link
+                href={authHref}
+                className="hidden md:inline-flex items-center gap-1 ml-1 rounded-full px-2.5 py-1 text-[13px] hover:bg-emerald-50"
+              >
+                <User size={15} />
+                {authLabel}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => openAuth('login')}
+                className="hidden md:inline-flex items-center gap-1 ml-1 rounded-full px-2.5 py-1 text-[13px] hover:bg-emerald-50"
+              >
+                <User size={15} />
+                Войти
+              </button>
+            )}
           </div>
         </div>
 
