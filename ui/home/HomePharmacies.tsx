@@ -77,11 +77,11 @@ export default function HomePharmacies() {
             })}
           </ul>
 
-          <div className="relative rounded-3xl overflow-hidden border border-slate-100 shadow-sm min-h-[280px] bg-slate-100">
+          <div className="relative z-0 isolate rounded-3xl overflow-hidden border border-slate-100 shadow-sm min-h-[280px] bg-slate-100">
             <Map pharmacies={list} activeId={activeId} onSelect={setActiveId} />
             <Link
               href="/branches"
-              className="absolute right-3 bottom-3 z-[500] rounded-full bg-white/95 border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-800 shadow"
+              className="absolute right-3 bottom-3 z-10 rounded-full bg-white/95 border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-800 shadow"
             >
               На карте ↗
             </Link>

@@ -59,3 +59,11 @@ video {
     padding-bottom: 0;
   }
 }
+
+/* Leaflet panes use z-index up to ~1000 — hide maps while mobile drawer is open */
+body.np-drawer-open .leaflet-container,
+body.np-drawer-open .leaflet-pane,
+body.np-drawer-open .leaflet-control-container {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}

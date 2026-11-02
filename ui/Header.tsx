@@ -74,8 +74,10 @@ export default function Header() {
     if (!menuOpen) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    document.body.classList.add('np-drawer-open')
     return () => {
       document.body.style.overflow = prev
+      document.body.classList.remove('np-drawer-open')
     }
   }, [menuOpen])
 
@@ -179,14 +181,15 @@ export default function Header() {
     menuOpen &&
     typeof document !== 'undefined' &&
     createPortal(
-      <div className="fixed inset-0 z-[80] lg:hidden">
+      <div className="fixed inset-0 z-[1200] lg:hidden">
         <button
           type="button"
           className="absolute inset-0 bg-black/40"
           aria-label="Закрыть меню"
           onClick={() => setMenuOpen(false)}
         />
-        <aside className="absolute left-0 top-0 h-full w-[86%] max-w-[340px] bg-white shadow-2xl flex flex-col">
+        {/* z-[1200] keeps drawer above Leaflet panes/controls (~400–1000) */}
+        <aside className="absolute left-0 top-0 h-full w-[86%] max-w-[340px] bg-white shadow-2xl flex flex-col isolate">
           <div className="flex items-center justify-between px-4 pt-4 pb-3">
             <Link
               href="/"
