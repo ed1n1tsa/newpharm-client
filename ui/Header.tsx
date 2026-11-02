@@ -55,7 +55,6 @@ export default function Header() {
   const [loggedIn, setLoggedIn] = useState(false)
   const [cityOpen, setCityOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
   const [catalogOpen, setCatalogOpen] = useState(false)
   const [drawerCityOpen, setDrawerCityOpen] = useState(false)
 
@@ -454,14 +453,6 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-0.5 ml-auto text-slate-700">
-            <button
-              type="button"
-              className="p-1.5 rounded-full hover:bg-emerald-50"
-              aria-label="Поиск"
-              onClick={() => setSearchOpen((v) => !v)}
-            >
-              <Search size={17} />
-            </button>
             <Link
               href={favoritesHref}
               className="p-1.5 rounded-full hover:bg-emerald-50"
@@ -520,17 +511,6 @@ export default function Header() {
             </ul>
           )}
         </div>
-
-        {searchOpen && (
-          <div className="pb-2.5">
-            <SearchBox
-              catalogHref={catalogHref}
-              compact
-              autoFocus
-              onSubmitted={() => setSearchOpen(false)}
-            />
-          </div>
-        )}
       </div>
 
       {drawer}
