@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase-admin'
+import { supabase } from '@/lib/supabase-browser'
 import Image from 'next/image'
 import Link from 'next/link'
 

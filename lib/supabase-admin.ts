@@ -1,13 +1,18 @@
-// import "server-only"; // закомментировано для сборки
+import "server-only";
 import { createClient } from "@supabase/supabase-js";
 
-// ✅ создаём и сразу экспортируем клиент администратора
-export const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE!,
-  { auth: { persistSession: false } }
-);
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceRole = process.env.SUPABASE_SERVICE_ROLE;
 
-// 🧩 алиасы для совместимости со старыми файлами
-export const supabase = supabaseAdmin;
+if (!url || !serviceRole) {
+  throw new Error(
+    "supabase-admin requires NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE on the server"
+  );
+}
+
+/** Server-only admin client. Never import this into client components. */
+export const supabaseAdmin = createClient(url, serviceRole, {
+  auth: { persistSession: false },
+});
+
 export const sbAdmin = supabaseAdmin;

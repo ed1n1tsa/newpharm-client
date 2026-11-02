@@ -1,8 +1,2 @@
-import dynamic from 'next/dynamic';
-
-// Динамическая загрузка компонента ProductPage с отключением SSR
-const ProductPage = dynamic(() => import('./page'), {
-  ssr: false, // Отключаем серверный рендеринг для этого компонента
-});
-
-export default ProductPage;
+/** @deprecated Prefer the App Router page at /ProductPage. Kept as a re-export for legacy imports. */
+export { default } from './page'
