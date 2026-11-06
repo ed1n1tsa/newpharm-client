@@ -9,18 +9,26 @@ import ProductToolbar from "./ProductToolbar"
 type Product = {
   id: string
   name: string
-  category: string
+  category?: string | null
   price: number
-  image_url: string
+  image_url?: string | null
   short_desc?: string | null
   full_desc?: string | null
 }
 
 type Category = { id: string; name: string }
 
-export default function ProductList({ categories, allProducts }: { categories: Category[]; allProducts: Product[] }) {
+export default function ProductList({
+  categories,
+  allProducts,
+  initialSearch = "",
+}: {
+  categories: Category[]
+  allProducts: Product[]
+  initialSearch?: string
+}) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState(initialSearch)
   const [filterOpen, setFilterOpen] = useState(false)
   const [sort, setSort] = useState("popular")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
@@ -151,7 +159,7 @@ export default function ProductList({ categories, allProducts }: { categories: C
                 price: p.price,
                 image: p.image_url || "/images/product.png",
                 description: p.short_desc || p.full_desc || "",
-                category: p.category,
+                category: p.category || "",
               }}
             />
           ))}

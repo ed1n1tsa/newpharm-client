@@ -1,15 +1,14 @@
 'use client'
 import { createClient } from '@supabase/supabase-js'
 
-export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true, // 👈 обязательно для Next.js router.push()
-      storageKey: 'supabase-auth-token',
-    },
-  }
-)
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321'
+const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'missing-anon-key'
+
+export const supabase = createClient(url, anon, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storageKey: 'supabase-auth-token',
+  },
+})

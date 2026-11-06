@@ -1,53 +1,119 @@
+'use client'
+
 import Image from 'next/image'
+import Link from 'next/link'
+import { phoneToWhatsAppLink } from '@/lib/phone'
+import { useT } from '@/ui/LocaleProvider'
+import LanguageSwitcher from '@/ui/LanguageSwitcher'
+
+const MAIN_WA = '77759849959'
 
 export default function Footer() {
-  return (
-    <footer className="border-t bg-white py-10 px-4">
-      <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8">
-        {/* Контакты и соцсети */}
-        <div className="space-y-6">
-          <div>
-            <h4 className="text-lg font-semibold text-slate-900">Контакты</h4>
-            <p className="text-slate-800 mt-1">+7 777 777 77 77</p>
-            <p className="text-slate-800">+7 777 777 77 77</p>
-          </div>
+  const t = useT()
+  const year = new Date().getFullYear()
 
-          <div>
-            <h4 className="text-lg font-semibold text-slate-900">Социальные сети</h4>
-            <div className="flex gap-4 mt-2 items-center">
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
-                <Image src="/icons/instagram.png" alt="Instagram" width={32} height={32} />
-              </a>
-              <a href="https://wa.me/77777777777" target="_blank" rel="noopener noreferrer">
-                <Image src="/icons/whatsapp.png" alt="WhatsApp" width={32} height={32} />
-              </a>
-              <a href="https://t.me/your_channel" target="_blank" rel="noopener noreferrer">
-                <Image src="/icons/telegram.png" alt="Telegram" width={32} height={32} />
-              </a>
-            </div>
+  return (
+    <footer className="bg-[#0f3d2e] text-emerald-50 mt-auto">
+      <div className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-9 grid gap-7 md:grid-cols-4">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Image src="/logo.png" alt="NewPharm" width={34} height={34} className="object-contain" />
+            <span className="text-[15px] font-bold text-white">NewPharm</span>
           </div>
+          <p className="text-[12px] text-emerald-100/80 leading-relaxed">
+            {t('footer.tagline')}
+          </p>
+          <LanguageSwitcher variant="pill" tone="dark" />
         </div>
 
-        {/* Карта */}
         <div>
-          <h4 className="text-lg font-semibold text-slate-900 mb-3">Мы на карте:</h4>
+          <h4 className="font-semibold text-white text-[13px] mb-2.5">{t('footer.buyers')}</h4>
+          <ul className="space-y-1.5 text-[12px] text-emerald-100/85">
+            <li><Link href="/catalog" className="hover:text-white">{t('footer.howToOrder')}</Link></li>
+            <li><Link href="/cart" className="hover:text-white">{t('footer.paymentReturn')}</Link></li>
+            <li><Link href="/branches" className="hover:text-white">{t('footer.deliveryPickup')}</Link></li>
+            <li><Link href="/#faq" className="hover:text-white">{t('footer.faq')}</Link></li>
+          </ul>
+        </div>
 
-          <div className="relative w-full h-[320px] md:h-[400px] rounded-xl overflow-hidden border border-slate-200 shadow-md">
-            <iframe
-              src="https://yandex.kz/map-widget/v1/?ll=51.867512%2C47.115214&z=16&oid=105830064578"
-              className="absolute inset-0 w-full h-full"
-              allowFullScreen
-              style={{ border: 0 }}
-              loading="lazy"
-              title="Карта NYU FARM"
-            ></iframe>
+        <div>
+          <h4 className="font-semibold text-white text-[13px] mb-2.5">{t('footer.company')}</h4>
+          <ul className="space-y-1.5 text-[12px] text-emerald-100/85">
+            <li><Link href="/" className="hover:text-white">{t('footer.aboutUs')}</Link></li>
+            <li><Link href="/branches" className="hover:text-white">{t('footer.contacts')}</Link></li>
+            <li><Link href="/branches" className="hover:text-white">{t('footer.branches')}</Link></li>
+            <li><Link href="/doctors" className="hover:text-white">{t('footer.jobs')}</Link></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 className="font-semibold text-white text-[13px] mb-2.5">{t('footer.contactUs')}</h4>
+          <ul className="space-y-1.5 text-[12px] text-emerald-100/85 mb-3">
+            <li>
+              <a href="tel:+77759849959" className="hover:text-white">
+                +7 775 984 99 59
+              </a>
+            </li>
+            <li>
+              <a href="mailto:support@newpharm.kz" className="hover:text-white">
+                support@newpharm.kz
+              </a>
+            </li>
+          </ul>
+          <div className="flex gap-2.5 items-center">
+            <a
+              href="https://www.instagram.com/newpharm.kz/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+              className="grid place-items-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20"
+            >
+              <Image
+                src="/home/social-instagram.png"
+                alt=""
+                width={18}
+                height={18}
+                className="object-contain brightness-0 invert"
+                unoptimized
+              />
+            </a>
+            <a
+              href={phoneToWhatsAppLink(MAIN_WA)}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="WhatsApp"
+              className="grid place-items-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20"
+            >
+              <Image
+                src="/home/social-whatsapp.png"
+                alt=""
+                width={18}
+                height={18}
+                className="object-contain brightness-0 invert"
+                unoptimized
+              />
+            </a>
+            <a
+              href="https://t.me/newpharm_kz"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Telegram"
+              className="grid place-items-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold"
+            >
+              TG
+            </a>
           </div>
         </div>
       </div>
 
-      {/* Низ футера */}
-      <div className="mt-10 border-t pt-4 text-center text-sm text-slate-500">
-        © 2025 НЬЮ-ФАРМ. Все права защищены.
+      <div className="border-t border-white/10">
+        <div className="max-w-[1120px] mx-auto px-4 py-3 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between text-[11px] text-emerald-200/60">
+          <span>{t('footer.rights', { year })}</span>
+          <div className="flex gap-4">
+            <span>{t('footer.privacy')}</span>
+            <span>{t('footer.terms')}</span>
+          </div>
+        </div>
       </div>
     </footer>
   )

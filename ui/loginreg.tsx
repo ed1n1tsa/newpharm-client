@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase-admin'
+import { supabase } from '@/lib/supabase-browser'
 import { X } from 'lucide-react'
 
 interface Props {

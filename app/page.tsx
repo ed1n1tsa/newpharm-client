@@ -1,54 +1,30 @@
-import { supabaseServer } from '@/lib/supabase-server'
-import Hero from '@/ui/Hero'
-import ServicesSection from '@/ui/ServicesSection'
-import NewsReels from '@/ui/NewsReels'
-import CatalogView from '@/ui/ProductList'
+import GuestHome from '@/ui/home/GuestHome'
+import { readHomepageCms } from '@/lib/cms-store'
+import { loadCatalogProducts } from '@/lib/catalog-products'
+import { DEFAULT_HOMEPAGE_CMS } from '@/lib/homepage-cms'
+
+export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  const supabase = await supabaseServer()
-
-  // 📦 Загружаем категории
-  const { data: categories, error: catError } = await supabase
-    .from('categories')
-    .select('id, name')
-    .order('name', { ascending: true })
-
-  if (catError) {
-    console.error('Ошибка загрузки категорий:', catError.message)
+  let cms = DEFAULT_HOMEPAGE_CMS
+  try {
+    cms = await readHomepageCms()
+  } catch (e) {
+    console.error('homepage cms', e)
   }
 
-  // 🛒 Загружаем все товары без пагинации (до 10 000)
-  const { data: products, error: prodError } = await supabase
-    .from('products')
-    .select('id, name, price, image_url, category')
-    .order('name', { ascending: true })
-    .limit(10000) // ✅ обязательно добавляем лимит
-
-  if (prodError) {
-    console.error('Ошибка загрузки товаров:', prodError.message)
+  let products: { id: string; name: string; price: number; image_url: string | null }[] = []
+  try {
+    const loaded = await loadCatalogProducts()
+    products = (loaded.products || []).slice(0, 24).map((p) => ({
+      id: String(p.id),
+      name: p.name || 'Товар',
+      price: Number(p.price) || 0,
+      image_url: p.image_url || null,
+    }))
+  } catch (e) {
+    console.error('homepage products', e)
   }
 
-  return (
-    <main className="min-h-screen">
-      {/* 🧱 Главный баннер */}
-      <Hero />
-
-      {/* 🛍️ Каталог товаров */}
-      <section className="container mx-auto px-4 py-10">
-        <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-6">
-          Каталог товаров
-        </h2>
-
-        {products && products.length > 0 ? (
-          <CatalogView categories={categories || []} allProducts={products} />
-        ) : (
-          <p className="text-gray-600">Товары пока отсутствуют.</p>
-        )}
-      </section>
-
-      {/* 💉 Услуги и новости */}
-      <ServicesSection />
-      <NewsReels />
-    </main>
-  )
+  return <GuestHome initialCms={cms} initialProducts={products} />
 }

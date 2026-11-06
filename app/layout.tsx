@@ -1,37 +1,38 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import "@/styles/globals.css";
 
 import Providers from "@/ui/Providers";
 import { SupabaseListener } from "@/lib/supabase-listener";
-import LayoutContent from "@/ui/LayoutContent"; // 👈 импортируем новый клиентский компонент
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import LayoutContent from "@/ui/LayoutContent";
+import {
+  defaultLocale,
+  localeHtmlLang,
+  LOCALE_COOKIE,
+  normalizeLocale,
+} from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "NewPharm",
-  description: "Онлайн-аптека",
+  title: "NewPharm — лекарства и здоровье",
+  description: "Онлайн-аптека NewPharm: лекарства, консультации врачей, аптеки рядом",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = await cookies();
+  const locale = normalizeLocale(cookieStore.get(LOCALE_COOKIE)?.value);
+  const lang = localeHtmlLang[locale] || localeHtmlLang[defaultLocale];
+
   return (
-    <html lang="ru">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Providers>
+    <html lang={lang}>
+      <body className="antialiased">
+        <Providers initialLocale={locale}>
           <SupabaseListener />
           <LayoutContent>{children}</LayoutContent>
         </Providers>

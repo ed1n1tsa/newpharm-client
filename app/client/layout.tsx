@@ -22,8 +22,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   async function handleLogout() {
     await supabase.auth.signOut()
-    window.location.href = '/login'
+    window.location.href = '/'
   }
+
 
   return (
     <div className="client-dashboard min-h-screen flex bg-[#f7f8f9] text-gray-800 relative">
@@ -35,14 +36,14 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           className="p-6 border-b flex items-center gap-3 text-emerald-600 font-semibold text-lg"
         >
           <Image
-            src="/logoNew.png"
-            alt="Нью-Фарм логотип"
+            src="/logo.png"
+            alt="NewPharm"
             width={36}
             height={36}
-            className="rounded-md object-contain"
+            className="object-contain"
             priority
           />
-          <span className="tracking-wide">Нью-Фарм</span>
+          <span className="tracking-wide">NewPharm</span>
         </Link>
 
         {/* 🔗 Меню */}
@@ -69,18 +70,27 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             })}
         </div>
 
-        {/* 👤 Пользователь + выход */}
+        {/* 👤 Пользователь + выход только для авторизованных */}
         <div className="p-5 border-t text-sm">
-          {userEmail && (
-            <div className="text-gray-700 font-medium truncate">{userEmail}</div>
+          {userEmail ? (
+            <>
+              <div className="text-gray-700 font-medium truncate">{userEmail}</div>
+              <button
+                onClick={handleLogout}
+                className="mt-2 flex items-center gap-2 text-red-500 hover:text-red-600 font-semibold transition"
+              >
+                <LogOut size={16} />
+                Выйти
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/"
+              className="text-emerald-600 hover:text-emerald-700 font-semibold transition"
+            >
+              На главную
+            </Link>
           )}
-          <button
-            onClick={handleLogout}
-            className="mt-2 flex items-center gap-2 text-red-500 hover:text-red-600 font-semibold transition"
-          >
-            <LogOut size={16} />
-            Выйти
-          </button>
         </div>
       </aside>
 

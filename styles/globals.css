@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 @import 'leaflet/dist/leaflet.css';
 @import 'swiper/css';
 @import 'swiper/css/pagination';
@@ -7,62 +7,63 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ---------- Общие базовые стили ---------- */
+:root {
+  --np-green: #22c55e;
+  --np-green-dark: #15803d;
+  --np-green-soft: #ecfdf5;
+  --np-ink: #0f172a;
+  --vh: 1vh;
+}
 
 html,
 body {
-  @apply font-inter text-text bg-[#1E1E1E];
+  font-family: 'Manrope', system-ui, sans-serif;
+  color: var(--np-ink);
+  background: #ffffff;
   overflow-x: hidden;
   scroll-behavior: smooth;
-  scroll-padding-top: 80px; /* если есть фиксированное меню */
-  -webkit-tap-highlight-color: transparent; /* убирает подсветку при тапе */
+  -webkit-tap-highlight-color: transparent;
+  min-height: 100%;
 }
 
-/* ---------- Изображения и видео ---------- */
+body {
+  min-height: calc(var(--vh, 1vh) * 100);
+  padding-bottom: 0;
+}
+
 img,
 video {
   display: block;
   max-width: 100%;
   height: auto;
-  user-select: none;
-  pointer-events: none; /* чтобы нельзя было случайно двигать изображение */
 }
 
-/* ---------- Универсальные фиксы ---------- */
 * {
   box-sizing: border-box;
 }
 
-section {
-  overflow: hidden; /* предотвращает сдвиги контента при адаптации */
-}
-
-/* ---------- Для стабильности высоты на мобилках ---------- */
-:root {
-  --vh: 1vh;
-}
-body {
-  height: calc(var(--vh, 1vh) * 100);
-}
-
-/* ---------- Сброс скролла при смене секций ---------- */
-main {
-  overflow-x: hidden;
-  overflow-y: auto;
-  scroll-snap-type: y mandatory;
-}
-
-/* ---------- 🔹 Убираем полосу прокрутки (scrollbar) ---------- */
-/* Применяется к любым элементам с классом .no-scrollbar */
-
 .no-scrollbar {
-  -ms-overflow-style: none; /* IE и Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 .no-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari и Opera */
+  display: none;
 }
 
-/* ---------- Пример: мобильный фильтр категорий ---------- */
-/* В твоём ProductList уже есть: <div className="flex gap-2 overflow-x-auto no-scrollbar"> */
-/* Теперь линия скролла на мобильных исчезнет полностью, но свайп останется */
+/* Guest pages need bottom padding for mobile tab bar */
+.guest-page {
+  padding-bottom: 5.5rem;
+}
+@media (min-width: 768px) {
+  .guest-page {
+    padding-bottom: 0;
+  }
+}
+
+/* Leaflet panes use z-index up to ~1000 — hide maps while mobile drawer is open */
+body.np-drawer-open .leaflet-container,
+body.np-drawer-open .leaflet-pane,
+body.np-drawer-open .leaflet-control-container {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}

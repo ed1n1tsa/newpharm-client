@@ -2,45 +2,98 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import {
-  Home,
-  ShoppingCart,
-  User,
-  Boxes,
-  Stethoscope,
-  MapPin
-} from 'lucide-react'
-
-const navItems = [
-  { href: '/', label: 'Главная', icon: Home },
-  { href: '/catalog', label: 'Каталог', icon: Boxes },
-  { href: '/profile', label: 'Профиль', icon: User }
-]
+import { useEffect, useState } from 'react'
+import { Home, LayoutGrid, Stethoscope, Tag, User } from 'lucide-react'
+import { supabase } from '@/lib/supabase-browser'
+import { useAuth } from '@/ui/AuthContext'
+import { useT } from '@/ui/LocaleProvider'
 
 export default function MobileNav() {
   const pathname = usePathname()
+  const { openAuth } = useAuth()
+  const t = useT()
+  const [loggedIn, setLoggedIn] = useState(false)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setLoggedIn(!!data.user))
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setLoggedIn(!!session?.user)
+    })
+    return () => sub.subscription.unsubscribe()
+  }, [])
+
+  const navItems = [
+    { href: '/', label: t('nav.home'), icon: Home },
+    { href: '/catalog', label: t('nav.catalog'), icon: LayoutGrid },
+    { href: '/doctors', label: t('nav.doctors'), icon: Stethoscope },
+    { href: '/#promos', label: t('nav.promos'), icon: Tag },
+  ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-sm md:hidden">
-      <div className="flex justify-around items-center h-16">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-[#eef2f6] md:hidden pb-[env(safe-area-inset-bottom)]">
+      <div className="flex justify-around items-center h-14">
         {navItems.map(({ href, label, icon: Icon }) => {
-          const isActive = pathname === href
+          const pathOnly = href.split('#')[0] || '/'
+          const isActive =
+            pathOnly === '/'
+              ? pathname === '/'
+              : pathname === pathOnly || pathname.startsWith(pathOnly + '/')
           return (
             <Link
               key={href}
               href={href}
-              className="flex flex-col items-center text-xs text-gray-600 hover:text-emerald-600 transition"
+              className="relative flex flex-col items-center gap-0.5 text-[10px] min-w-[56px]"
             >
-              <Icon
-                size={22}
-                className={isActive ? 'text-emerald-600' : 'text-gray-400'}
-              />
-              <span className={isActive ? 'text-emerald-600 font-medium' : ''}>
+              <span
+                className={`grid place-items-center h-7 w-7 rounded-full ${
+                  isActive ? 'bg-[#e8f8ee] text-[#16a34a]' : 'text-slate-400'
+                }`}
+              >
+                <Icon size={18} />
+              </span>
+              <span className={isActive ? 'text-[#16a34a] font-semibold' : 'text-slate-500'}>
                 {label}
               </span>
             </Link>
           )
         })}
+
+        {loggedIn ? (
+          <Link
+            href="/profile"
+            className="relative flex flex-col items-center gap-0.5 text-[10px] min-w-[56px]"
+          >
+            <span
+              className={`grid place-items-center h-7 w-7 rounded-full ${
+                pathname.startsWith('/profile')
+                  ? 'bg-[#e8f8ee] text-[#16a34a]'
+                  : 'text-slate-400'
+              }`}
+            >
+              <User size={18} />
+            </span>
+            <span
+              className={
+                pathname.startsWith('/profile')
+                  ? 'text-[#16a34a] font-semibold'
+                  : 'text-slate-500'
+              }
+            >
+              {t('nav.profile')}
+            </span>
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={() => openAuth('login')}
+            className="relative flex flex-col items-center gap-0.5 text-[10px] min-w-[56px]"
+          >
+            <span className="grid place-items-center h-7 w-7 rounded-full text-slate-400">
+              <User size={18} />
+            </span>
+            <span className="text-slate-500">{t('nav.login')}</span>
+          </button>
+        )}
       </div>
     </nav>
   )
