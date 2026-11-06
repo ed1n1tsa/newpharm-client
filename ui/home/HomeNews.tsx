@@ -3,10 +3,12 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { HomeNews } from '@/lib/homepage-cms'
+import { localeDate } from '@/lib/i18n'
+import { useLocale, useT } from '@/ui/LocaleProvider'
 
-function formatDate(iso: string) {
+function formatDate(iso: string, locale: string) {
   try {
-    return new Date(iso).toLocaleDateString('ru-RU', {
+    return new Date(iso).toLocaleDateString(locale, {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -17,15 +19,19 @@ function formatDate(iso: string) {
 }
 
 export default function HomeNewsSection({ news }: { news: HomeNews[] }) {
+  const t = useT()
+  const { locale } = useLocale()
   const list = news.filter((n) => n.active).sort((a, b) => a.sort - b.sort)
   if (!list.length) return null
 
   return (
     <section id="news" className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-5">
       <div className="flex items-end justify-between mb-3">
-        <h2 className="text-[18px] md:text-[22px] font-bold text-[#111827]">Новости и акции</h2>
+        <h2 className="text-[18px] md:text-[22px] font-bold text-[#111827]">
+          {t('home.newsTitle')}
+        </h2>
         <Link href="/#news" className="text-[13px] font-semibold text-[#22c55e]">
-          Все новости →
+          {t('home.allNews')}
         </Link>
       </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
@@ -42,7 +48,9 @@ export default function HomeNewsSection({ news }: { news: HomeNews[] }) {
               <h3 className="text-[13px] font-semibold text-[#111827] line-clamp-2 leading-snug">
                 {n.title}
               </h3>
-              <p className="mt-1.5 text-[11px] text-[#9ca3af]">{formatDate(n.date)}</p>
+              <p className="mt-1.5 text-[11px] text-[#9ca3af]">
+                {formatDate(n.date, localeDate[locale])}
+              </p>
             </div>
           </Link>
         ))}

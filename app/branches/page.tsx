@@ -4,6 +4,7 @@
 import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase-browser'
+import { useT } from '@/ui/LocaleProvider'
 
 
 // Импорт из app/branches/
@@ -18,6 +19,7 @@ interface Branch {
 }
 
 export default function BranchesPage() {
+  const t = useT()
   const [branches, setBranches] = useState<Branch[]>([])
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export default function BranchesPage() {
     <main className="bg-[#0d0d0d] min-h-screen text-white px-4 py-12">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-white">
-          Наши филиалы на карте
+          {t('branches.title')}
         </h1>
 
         <div className="h-[500px] w-full rounded-xl overflow-hidden border border-gray-700">

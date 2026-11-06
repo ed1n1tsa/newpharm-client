@@ -12,6 +12,8 @@ import {
 import { useRouter } from 'next/navigation'
 import { Search, ShoppingCart, X } from 'lucide-react'
 import { useCart } from '@/ui/CartContext'
+import { localeDate } from '@/lib/i18n'
+import { useLocale } from '@/ui/LocaleProvider'
 
 export type SearchHit = {
   id: string
@@ -19,10 +21,6 @@ export type SearchHit = {
   brand?: string
   price: number
   image_url?: string | null
-}
-
-function formatPrice(n: number) {
-  return `${Math.round(n).toLocaleString('ru-RU')} ₸`
 }
 
 function productHref(id: string, catalogHref: string) {
@@ -50,6 +48,7 @@ export default function SearchBox({
 }: Props) {
   const router = useRouter()
   const { add } = useCart()
+  const { locale, t, pluralProducts } = useLocale()
   const listId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
   const [q, setQ] = useState(initialQuery)
@@ -88,7 +87,7 @@ export default function SearchBox({
     }
 
     setLoading(true)
-    const t = window.setTimeout(async () => {
+    const timer = window.setTimeout(async () => {
       abortRef.current?.abort()
       const ac = new AbortController()
       abortRef.current = ac
@@ -112,7 +111,7 @@ export default function SearchBox({
     }, 220)
 
     return () => {
-      window.clearTimeout(t)
+      window.clearTimeout(timer)
     }
   }, [q])
 
@@ -140,7 +139,12 @@ export default function SearchBox({
     })
   }
 
+  function formatPrice(n: number) {
+    return `${Math.round(n).toLocaleString(localeDate[locale])} ₸`
+  }
+
   const showPanel = open && q.trim().length >= 2
+  const trimmed = q.trim()
 
   return (
     <div ref={rootRef} className={`relative ${className}`}>
@@ -172,7 +176,7 @@ export default function SearchBox({
             if (q.trim().length >= 2) setOpen(true)
           }}
           autoFocus={autoFocus}
-          placeholder="Поиск лекарств, товаров, заболеваний…"
+          placeholder={t('search.placeholder')}
           className={`flex-1 min-w-0 outline-none bg-transparent text-slate-800 placeholder:text-slate-400 ${
             compact
               ? 'px-4 py-2 text-[13px]'
@@ -183,7 +187,7 @@ export default function SearchBox({
         {q && (
           <button
             type="button"
-            aria-label="Очистить"
+            aria-label={t('search.clear')}
             onClick={() => {
               setQ('')
               setItems([])
@@ -201,7 +205,7 @@ export default function SearchBox({
             compact ? 'px-4 py-1.5 text-[13px]' : 'px-4 lg:px-5 py-2 text-[13px]'
           }`}
         >
-          Найти
+          {t('search.find')}
         </button>
       </form>
 
@@ -212,10 +216,14 @@ export default function SearchBox({
         >
           <p className="px-3.5 pt-2.5 pb-1.5 text-[11px] text-[#9ca3af]">
             {loading
-              ? 'Ищем…'
+              ? t('search.searching')
               : total > 0
-                ? `Найдено ${total} товар${plural(total)} по запросу «${q.trim()}»`
-                : `Ничего не найдено по запросу «${q.trim()}»`}
+                ? t('search.found', {
+                    n: total,
+                    plural: pluralProducts(total),
+                    q: trimmed,
+                  })
+                : t('search.none', { q: trimmed })}
           </p>
 
           {items.length > 0 && (
@@ -253,7 +261,7 @@ export default function SearchBox({
                     </span>
                     <button
                       type="button"
-                      aria-label="В корзину"
+                      aria-label={t('search.addToCart')}
                       onClick={(e) => onAdd(p, e)}
                       className="shrink-0 grid place-items-center h-8 w-8 rounded-lg bg-[#22c55e] hover:bg-[#16a34a] text-white transition"
                     >
@@ -270,18 +278,10 @@ export default function SearchBox({
             onClick={() => goAll()}
             className="w-full px-3.5 py-2.5 text-[13px] font-semibold text-[#16a34a] bg-[#e8f8ee] hover:bg-[#dcfce7] transition text-left sm:text-center"
           >
-            Все результаты по запросу «{q.trim()}» →
+            {t('search.allResults', { q: trimmed })}
           </button>
         </div>
       )}
     </div>
   )
-}
-
-function plural(n: number) {
-  const m10 = n % 10
-  const m100 = n % 100
-  if (m10 === 1 && m100 !== 11) return ''
-  if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return 'а'
-  return 'ов'
 }

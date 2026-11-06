@@ -8,6 +8,7 @@ import { Lock, X } from 'lucide-react'
 import { useAuth, type AuthTab } from './AuthContext'
 import { supabase } from '@/lib/supabase-browser'
 import { formatPhoneDisplay, normalizePhone } from '@/lib/phone'
+import { useT } from '@/ui/LocaleProvider'
 
 function digitsOnly(v: string) {
   return v.replace(/\D/g, '')
@@ -36,6 +37,7 @@ function toE164(localMasked: string) {
 export default function AuthModal() {
   const { isAuthOpen, authTab, setAuthTab, closeAuth } = useAuth()
   const router = useRouter()
+  const t = useT()
   const [localPhone, setLocalPhone] = useState('')
   const [step, setStep] = useState<'phone' | 'otp'>('phone')
   const [code, setCode] = useState('')
@@ -73,11 +75,11 @@ export default function AuthModal() {
     setRetryAfter(null)
     const phone = toE164(localPhone)
     if (!phone) {
-      setError('Введите номер в формате (777) 123-45-67')
+      setError(t('auth.errPhoneFormat'))
       return
     }
     if (authTab === 'register' && !humanOk) {
-      setError('Подтвердите, что вы не робот')
+      setError(t('auth.errRobot'))
       return
     }
     setLoading(true)
@@ -90,14 +92,14 @@ export default function AuthModal() {
       const data = await res.json()
       if (!res.ok || !data.ok) {
         if (data.retryAfterSec) setRetryAfter(data.retryAfterSec)
-        throw new Error(data.error || 'Не удалось отправить код')
+        throw new Error(data.error || t('auth.errSendFail'))
       }
       setNormalized(phone)
-      setHint(`Код отправлен по SMS на ${formatPhoneDisplay(phone)}`)
+      setHint(t('auth.codeSent', { phone: formatPhoneDisplay(phone) }))
       setStep('otp')
       setCode('')
     } catch (err: any) {
-      setError(err?.message || 'Ошибка отправки')
+      setError(err?.message || t('auth.errSend'))
     } finally {
       setLoading(false)
     }
@@ -108,11 +110,11 @@ export default function AuthModal() {
     setError(null)
     const phone = normalized || toE164(localPhone)
     if (!phone) {
-      setError('Некорректный телефон')
+      setError(t('auth.errBadPhone'))
       return
     }
     if (!code.trim()) {
-      setError('Введите код из SMS')
+      setError(t('auth.errNeedCode'))
       return
     }
     setLoading(true)
@@ -124,7 +126,7 @@ export default function AuthModal() {
       })
       const data = await res.json()
       if (!res.ok || !data.ok) {
-        throw new Error(data.error || 'Неверный код')
+        throw new Error(data.error || t('auth.errBadCode'))
       }
 
       let sessErr = (
@@ -148,7 +150,7 @@ export default function AuthModal() {
       // Stay on the public site — no /client portal redirect
       router.refresh()
     } catch (err: any) {
-      setError(err?.message || 'Ошибка подтверждения')
+      setError(err?.message || t('auth.errVerify'))
     } finally {
       setLoading(false)
     }
@@ -165,7 +167,7 @@ export default function AuthModal() {
     <div className="fixed inset-0 z-[100] grid place-items-center p-4">
       <button
         type="button"
-        aria-label="Закрыть"
+        aria-label={t('auth.close')}
         className="absolute inset-0 bg-black/45 backdrop-blur-[1px]"
         onClick={closeAuth}
       />
@@ -177,7 +179,7 @@ export default function AuthModal() {
       >
         <button
           type="button"
-          aria-label="Закрыть"
+          aria-label={t('auth.close')}
           onClick={closeAuth}
           className="absolute right-3.5 top-3.5 z-10 grid h-8 w-8 place-items-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"
         >
@@ -208,7 +210,7 @@ export default function AuthModal() {
                   : 'text-[#6b7280] hover:text-[#111827]'
               }`}
             >
-              Вход
+              {t('auth.login')}
             </button>
             <button
               type="button"
@@ -219,7 +221,7 @@ export default function AuthModal() {
                   : 'text-[#6b7280] hover:text-[#111827]'
               }`}
             >
-              Регистрация
+              {t('auth.register')}
             </button>
           </div>
 
@@ -228,19 +230,17 @@ export default function AuthModal() {
               id="auth-modal-title"
               className="text-[22px] font-extrabold text-[#111827] tracking-[-0.02em]"
             >
-              {isLogin ? 'Вход в аккаунт' : 'Регистрация'}
+              {isLogin ? t('auth.loginTitle') : t('auth.registerTitle')}
             </h2>
             <p className="mt-1.5 text-[13px] leading-snug text-[#6b7280]">
-              {isLogin
-                ? 'Введите номер телефона, чтобы войти в свой аккаунт'
-                : 'Создайте аккаунт, чтобы сохранять заказы, избранное и получать персональные акции'}
+              {isLogin ? t('auth.loginSubtitle') : t('auth.registerSubtitle')}
             </p>
           </div>
 
           {error && (
             <div className="mt-4 rounded-xl bg-red-50 text-red-700 px-3 py-2 text-[13px]">
               {error}
-              {retryAfter ? ` (через ~${retryAfter} сек.)` : null}
+              {retryAfter ? t('auth.retryAfter', { sec: retryAfter }) : null}
             </div>
           )}
           {hint && (
@@ -253,7 +253,7 @@ export default function AuthModal() {
             <form onSubmit={onPrimarySubmit} className="mt-5 space-y-4">
               <div>
                 <label className="block text-[13px] font-medium text-[#374151] mb-1.5">
-                  Номер телефона
+                  {t('auth.phone')}
                 </label>
                 <div className="flex rounded-2xl border border-[#e5e7eb] overflow-hidden focus-within:border-[#22c55e]">
                   <div className="inline-flex items-center gap-1.5 px-3 bg-[#f9fafb] border-r border-[#e5e7eb] text-[14px] text-[#111827] shrink-0">
@@ -267,7 +267,7 @@ export default function AuthModal() {
                     inputMode="numeric"
                     value={localPhone}
                     onChange={(e) => setLocalPhone(formatLocalPhone(e.target.value))}
-                    placeholder="(777) 123-45-67"
+                    placeholder={t('auth.phonePlaceholder')}
                     required
                     className="flex-1 min-w-0 px-3 py-3 text-[14px] outline-none bg-white"
                     autoComplete="tel-national"
@@ -278,7 +278,7 @@ export default function AuthModal() {
               {!isLogin && (
                 <div>
                   <label className="block text-[13px] font-medium text-[#374151] mb-1.5">
-                    Проверка на робота
+                    {t('auth.humanCheck')}
                   </label>
                   <label className="flex items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-[#f9fafb] px-3.5 py-3 cursor-pointer select-none">
                     <input
@@ -287,7 +287,7 @@ export default function AuthModal() {
                       onChange={(e) => setHumanOk(e.target.checked)}
                       className="size-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                     />
-                    <span className="text-[14px] text-[#111827]">Я не робот</span>
+                    <span className="text-[14px] text-[#111827]">{t('auth.notRobot')}</span>
                   </label>
                 </div>
               )}
@@ -298,16 +298,16 @@ export default function AuthModal() {
                 className="w-full rounded-full bg-[#22c55e] hover:bg-[#16a34a] text-white font-semibold py-3 text-[14px] transition disabled:opacity-60"
               >
                 {loading
-                  ? 'Отправляем SMS…'
+                  ? t('auth.sendingSms')
                   : isLogin
-                    ? 'Получить код'
-                    : 'Зарегистрироваться'}
+                    ? t('auth.getCode')
+                    : t('auth.signUp')}
               </button>
             </form>
           ) : (
             <form onSubmit={verifyCode} className="mt-5 space-y-4">
               <p className="text-[13px] text-[#6b7280] text-center">
-                Номер:{' '}
+                {t('auth.phonePrefix')}{' '}
                 <strong className="text-[#111827]">
                   {formatPhoneDisplay(normalized || '')}
                 </strong>{' '}
@@ -320,12 +320,12 @@ export default function AuthModal() {
                     setHint(null)
                   }}
                 >
-                  изменить
+                  {t('auth.changePhone')}
                 </button>
               </p>
               <div>
                 <label className="block text-[13px] font-medium text-[#374151] mb-1.5">
-                  Код из SMS
+                  {t('auth.codeLabel')}
                 </label>
                 <input
                   inputMode="numeric"
@@ -337,7 +337,7 @@ export default function AuthModal() {
                   className="w-full rounded-2xl border border-[#e5e7eb] px-4 py-3 text-[18px] tracking-[0.35em] text-center outline-none focus:border-[#22c55e]"
                 />
                 <p className="mt-1.5 text-[12px] text-[#9ca3af] text-center">
-                  Код действует 5 минут
+                  {t('auth.codeHint')}
                 </p>
               </div>
               <button
@@ -345,7 +345,11 @@ export default function AuthModal() {
                 disabled={loading}
                 className="w-full rounded-full bg-[#22c55e] hover:bg-[#16a34a] text-white font-semibold py-3 text-[14px] transition disabled:opacity-60"
               >
-                {loading ? 'Проверяем…' : isLogin ? 'Войти' : 'Завершить регистрацию'}
+                {loading
+                  ? t('auth.checking')
+                  : isLogin
+                    ? t('auth.verify')
+                    : t('auth.finishRegister')}
               </button>
               <button
                 type="button"
@@ -353,7 +357,7 @@ export default function AuthModal() {
                 onClick={() => requestSms()}
                 className="w-full text-[13px] text-emerald-600 hover:underline py-1"
               >
-                Отправить код ещё раз
+                {t('auth.resend')}
               </button>
             </form>
           )}
@@ -362,25 +366,25 @@ export default function AuthModal() {
             {isLogin ? (
               <p className="inline-flex items-center gap-1.5 text-[12px] text-[#9ca3af]">
                 <Lock size={12} />
-                Вход по SMS-коду, без пароля
+                {t('auth.secureHint')}
               </p>
             ) : (
               <p className="text-[11px] leading-snug text-[#9ca3af]">
-                Регистрируясь, вы соглашаетесь с{' '}
+                {t('auth.agreePrefix')}{' '}
                 <Link
                   href="/#faq"
                   className="text-emerald-600 underline"
                   onClick={closeAuth}
                 >
-                  условиями использования
+                  {t('auth.terms')}
                 </Link>{' '}
-                и{' '}
+                {t('auth.and')}{' '}
                 <Link
                   href="/#faq"
                   className="text-emerald-600 underline"
                   onClick={closeAuth}
                 >
-                  обработкой персональных данных
+                  {t('auth.privacy')}
                 </Link>
               </p>
             )}

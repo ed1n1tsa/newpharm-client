@@ -17,6 +17,7 @@ import {
   cartTotal,
 } from "@/lib/cart-types";
 import { supabase } from "@/lib/supabase-browser";
+import { useLocale } from "@/ui/LocaleProvider";
 
 type CartContextType = {
   items: CartItem[];
@@ -66,6 +67,7 @@ export default function CartProvider({
   children: React.ReactNode;
 }) {
   const toast = useToast();
+  const { t } = useLocale();
   const [items, setItems] = useState<CartItem[]>([]);
   const [ready, setReady] = useState(false);
   const itemsRef = useRef<CartItem[]>([]);
@@ -123,9 +125,9 @@ export default function CartProvider({
       itemsRef.current = next;
       writeGuestSilent(next);
       setItems(next);
-      toast.show("Товар добавлен в корзину");
+      toast.show(t("cart.added"));
     },
-    [toast]
+    [toast, t]
   );
 
   const setQty = useCallback((productId: string, qty: number) => {

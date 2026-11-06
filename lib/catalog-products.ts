@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { isSupabaseAdminConfigured, supabaseAdmin } from "@/lib/supabase-admin";
 import { categories as mockCategories, products as mockProducts } from "@/lib/mockData";
 
 export type CatalogProduct = {
@@ -22,6 +22,12 @@ export async function loadCatalogProducts(): Promise<{
   products: CatalogProduct[];
 }> {
   try {
+    if (!isSupabaseAdminConfigured()) {
+      return {
+        categories: mockCategories,
+        products: mockProducts as unknown as CatalogProduct[],
+      };
+    }
     const { data: products, error } = await supabaseAdmin
       .from("products")
       .select("id, name, price, image_url, category, short_desc, full_desc, stock, is_active")

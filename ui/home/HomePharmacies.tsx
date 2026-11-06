@@ -6,6 +6,7 @@ import { ChevronRight, MapPin } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useCity } from '@/ui/CityProvider'
 import { pharmaciesForCity, type PharmacyLocation } from '@/lib/pharmacy-locations'
+import { useT } from '@/ui/LocaleProvider'
 
 const Map = dynamic(() => import('./HomePharmaciesMap'), { ssr: false })
 
@@ -16,6 +17,7 @@ function isOpenNow() {
 
 export default function HomePharmacies() {
   const { city } = useCity()
+  const t = useT()
   const list = useMemo(() => pharmaciesForCity(city.id), [city.id])
   const [activeId, setActiveId] = useState<string | null>(null)
 
@@ -23,10 +25,10 @@ export default function HomePharmacies() {
     <section className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-5">
       <div className="flex items-end justify-between mb-3 gap-3">
         <h2 className="text-[18px] md:text-[22px] font-bold text-[#111827]">
-          Наши аптеки в {city.name}
+          {t('home.pharmaciesIn', { city: city.name })}
         </h2>
         <Link href="/branches" className="text-[13px] font-semibold text-[#22c55e] shrink-0">
-          Все аптеки →
+          {t('home.allPharmacies')}
         </Link>
       </div>
 
@@ -35,15 +37,15 @@ export default function HomePharmacies() {
           <span className="grid place-items-center h-12 w-12 rounded-full bg-[#e8f8ee] text-emerald-600">
             <MapPin size={22} />
           </span>
-          <p className="text-[#0f172a] font-semibold">Пока нет аптек в городе {city.name}</p>
-          <p className="text-sm text-[#64748b] max-w-md">
-            Выберите Атырау в шапке — там уже отмечены филиалы на карте — или откройте список филиалов.
+          <p className="text-[#0f172a] font-semibold">
+            {t('home.noPharmacies', { city: city.name })}
           </p>
+          <p className="text-sm text-[#64748b] max-w-md">{t('home.noPharmaciesHint')}</p>
           <Link
             href="/branches"
             className="mt-1 inline-flex rounded-full bg-[#22c55e] text-white text-sm font-semibold px-4 py-2"
           >
-            Все филиалы
+            {t('home.allBranches')}
           </Link>
         </div>
       ) : (
@@ -67,7 +69,7 @@ export default function HomePharmacies() {
                       <span className="font-semibold text-slate-900 block">{p.name}</span>
                       <span className="text-sm text-slate-500 block truncate">{p.address}</span>
                       <span className="mt-1 inline-flex text-xs font-semibold text-emerald-700 bg-emerald-50 rounded-full px-2 py-0.5">
-                        {isOpenNow() ? 'Открыта' : 'Закрыта'}
+                        {isOpenNow() ? t('home.openFemale') : t('home.closedFemale')}
                       </span>
                     </span>
                     <ChevronRight className="text-slate-300 shrink-0 mt-2" size={18} />
@@ -83,7 +85,7 @@ export default function HomePharmacies() {
               href="/branches"
               className="absolute right-3 bottom-3 z-10 rounded-full bg-white/95 border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-800 shadow"
             >
-              На карте ↗
+              {t('home.onMap')}
             </Link>
           </div>
         </div>

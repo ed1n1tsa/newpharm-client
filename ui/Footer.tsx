@@ -1,10 +1,17 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
 import { phoneToWhatsAppLink } from '@/lib/phone'
+import { useT } from '@/ui/LocaleProvider'
+import LanguageSwitcher from '@/ui/LanguageSwitcher'
 
 const MAIN_WA = '77759849959'
 
 export default function Footer() {
+  const t = useT()
+  const year = new Date().getFullYear()
+
   return (
     <footer className="bg-[#0f3d2e] text-emerald-50 mt-auto">
       <div className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-9 grid gap-7 md:grid-cols-4">
@@ -14,32 +21,33 @@ export default function Footer() {
             <span className="text-[15px] font-bold text-white">NewPharm</span>
           </div>
           <p className="text-[12px] text-emerald-100/80 leading-relaxed">
-            Онлайн-аптека и телемедицина в Атырау
+            {t('footer.tagline')}
           </p>
+          <LanguageSwitcher variant="pill" tone="dark" />
         </div>
 
         <div>
-          <h4 className="font-semibold text-white text-[13px] mb-2.5">Покупателям</h4>
+          <h4 className="font-semibold text-white text-[13px] mb-2.5">{t('footer.buyers')}</h4>
           <ul className="space-y-1.5 text-[12px] text-emerald-100/85">
-            <li><Link href="/catalog" className="hover:text-white">Как сделать заказ</Link></li>
-            <li><Link href="/cart" className="hover:text-white">Оплата и возврат</Link></li>
-            <li><Link href="/branches" className="hover:text-white">Доставка и самовывоз</Link></li>
-            <li><Link href="/#faq" className="hover:text-white">FAQ</Link></li>
+            <li><Link href="/catalog" className="hover:text-white">{t('footer.howToOrder')}</Link></li>
+            <li><Link href="/cart" className="hover:text-white">{t('footer.paymentReturn')}</Link></li>
+            <li><Link href="/branches" className="hover:text-white">{t('footer.deliveryPickup')}</Link></li>
+            <li><Link href="/#faq" className="hover:text-white">{t('footer.faq')}</Link></li>
           </ul>
         </div>
 
         <div>
-          <h4 className="font-semibold text-white text-[13px] mb-2.5">Компания</h4>
+          <h4 className="font-semibold text-white text-[13px] mb-2.5">{t('footer.company')}</h4>
           <ul className="space-y-1.5 text-[12px] text-emerald-100/85">
-            <li><Link href="/" className="hover:text-white">О нас</Link></li>
-            <li><Link href="/branches" className="hover:text-white">Контакты</Link></li>
-            <li><Link href="/branches" className="hover:text-white">Филиалы</Link></li>
-            <li><Link href="/doctors" className="hover:text-white">Вакансии</Link></li>
+            <li><Link href="/" className="hover:text-white">{t('footer.aboutUs')}</Link></li>
+            <li><Link href="/branches" className="hover:text-white">{t('footer.contacts')}</Link></li>
+            <li><Link href="/branches" className="hover:text-white">{t('footer.branches')}</Link></li>
+            <li><Link href="/doctors" className="hover:text-white">{t('footer.jobs')}</Link></li>
           </ul>
         </div>
 
         <div>
-          <h4 className="font-semibold text-white text-[13px] mb-2.5">Свяжитесь с нами</h4>
+          <h4 className="font-semibold text-white text-[13px] mb-2.5">{t('footer.contactUs')}</h4>
           <ul className="space-y-1.5 text-[12px] text-emerald-100/85 mb-3">
             <li>
               <a href="tel:+77759849959" className="hover:text-white">
@@ -100,10 +108,10 @@ export default function Footer() {
 
       <div className="border-t border-white/10">
         <div className="max-w-[1120px] mx-auto px-4 py-3 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between text-[11px] text-emerald-200/60">
-          <span>© {new Date().getFullYear()} NewPharm. Все права защищены.</span>
+          <span>{t('footer.rights', { year })}</span>
           <div className="flex gap-4">
-            <span>Политика конфиденциальности</span>
-            <span>Условия использования</span>
+            <span>{t('footer.privacy')}</span>
+            <span>{t('footer.terms')}</span>
           </div>
         </div>
       </div>

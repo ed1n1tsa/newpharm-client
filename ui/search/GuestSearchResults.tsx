@@ -10,7 +10,9 @@ import {
   X,
 } from 'lucide-react'
 import type { CatalogProduct } from '@/lib/catalog-products'
-import { brandOf, pluralProducts } from '@/lib/product-brand'
+import { brandOf } from '@/lib/product-brand'
+import { localeDate } from '@/lib/i18n'
+import { useLocale } from '@/ui/LocaleProvider'
 import SearchProductCard from './SearchProductCard'
 
 const PAGE_SIZE = 12
@@ -30,6 +32,8 @@ export default function GuestSearchResults({
   products,
   hrefBase = 'guest',
 }: Props) {
+  const { locale, t, pluralProducts } = useLocale()
+  const loc = localeDate[locale]
   const [activeCategories, setActiveCategories] = useState<string[]>([])
   const [brands, setBrands] = useState<string[]>([])
   const [inStockOnly, setInStockOnly] = useState(false)
@@ -65,9 +69,9 @@ export default function GuestSearchResults({
       map.set(b, (map.get(b) || 0) + 1)
     }
     return [...map.entries()]
-      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ru'))
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], loc))
       .map(([name, count]) => ({ name, count }))
-  }, [products])
+  }, [products, loc])
 
   const categoryCounts = useMemo(() => {
     const map = new Map<string, number>()
@@ -119,7 +123,7 @@ export default function GuestSearchResults({
         result.sort((a, b) => b.price - a.price)
         break
       case 'name':
-        result.sort((a, b) => a.name.localeCompare(b.name, 'ru'))
+        result.sort((a, b) => a.name.localeCompare(b.name, loc))
         break
       default:
         break
@@ -135,6 +139,7 @@ export default function GuestSearchResults({
     maxPrice,
     inStockOnly,
     sort,
+    loc,
   ])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
@@ -159,11 +164,15 @@ export default function GuestSearchResults({
   }
 
   const visibleBrands = showAllBrands ? brandCounts : brandCounts.slice(0, 6)
+  const productWord = (n: number) =>
+    t('catalog.productWord', { plural: pluralProducts(n) })
 
   const filtersPanel = (
     <div className="space-y-6">
       <div>
-        <p className="text-[14px] font-bold text-[#111827] mb-2.5">Категории</p>
+        <p className="text-[14px] font-bold text-[#111827] mb-2.5">
+          {t('catalog.categories')}
+        </p>
         <ul className="space-y-2">
           {categoryCounts.map((c) => (
             <li key={c.id}>
@@ -180,13 +189,13 @@ export default function GuestSearchResults({
             </li>
           ))}
           {!categoryCounts.length && (
-            <li className="text-[13px] text-[#9ca3af]">Нет категорий</li>
+            <li className="text-[13px] text-[#9ca3af]">{t('catalog.noCategories')}</li>
           )}
         </ul>
       </div>
 
       <div>
-        <p className="text-[14px] font-bold text-[#111827] mb-2.5">Цена</p>
+        <p className="text-[14px] font-bold text-[#111827] mb-2.5">{t('catalog.price')}</p>
         <div className="flex items-center gap-2">
           <input
             type="number"
@@ -198,7 +207,7 @@ export default function GuestSearchResults({
               setMinPrice(Number(e.target.value) || 0)
             }}
             className="w-1/2 rounded-xl border border-[#e5e7eb] px-3 py-2 text-[13px] outline-none focus:border-emerald-500"
-            aria-label="Цена от"
+            aria-label={t('catalog.priceFrom')}
           />
           <span className="text-[#9ca3af]">—</span>
           <input
@@ -211,19 +220,19 @@ export default function GuestSearchResults({
               setMaxPrice(Number(e.target.value) || 0)
             }}
             className="w-1/2 rounded-xl border border-[#e5e7eb] px-3 py-2 text-[13px] outline-none focus:border-emerald-500"
-            aria-label="Цена до"
+            aria-label={t('catalog.priceTo')}
           />
         </div>
         <p className="mt-1.5 text-[11px] text-[#9ca3af]">
-          {priceBounds.min.toLocaleString('ru-RU')} —{' '}
-          {priceBounds.max.toLocaleString('ru-RU')} ₸
+          {priceBounds.min.toLocaleString(loc)} —{' '}
+          {priceBounds.max.toLocaleString(loc)} ₸
         </p>
       </div>
 
       {brandCounts.length > 0 && (
         <div>
           <p className="text-[14px] font-bold text-[#111827] mb-2.5">
-            Производитель
+            {t('catalog.brands')}
           </p>
           <ul className="space-y-2">
             {visibleBrands.map((b) => (
@@ -247,14 +256,16 @@ export default function GuestSearchResults({
               onClick={() => setShowAllBrands((v) => !v)}
               className="mt-2 text-[13px] font-medium text-emerald-600 hover:text-emerald-700"
             >
-              {showAllBrands ? 'Свернуть' : 'Показать все'}
+              {showAllBrands ? t('catalog.collapse') : t('catalog.showAll')}
             </button>
           )}
         </div>
       )}
 
       <div>
-        <p className="text-[14px] font-bold text-[#111827] mb-2.5">Наличие</p>
+        <p className="text-[14px] font-bold text-[#111827] mb-2.5">
+          {t('catalog.availability')}
+        </p>
         <label className="inline-flex items-center gap-2.5 text-[13px] text-[#374151] cursor-pointer">
           <span
             role="switch"
@@ -281,7 +292,7 @@ export default function GuestSearchResults({
               }`}
             />
           </span>
-          Только в наличии
+          {t('catalog.inStockOnly')}
         </label>
       </div>
     </div>
@@ -307,18 +318,30 @@ export default function GuestSearchResults({
     return pages
   }, [currentPage, totalPages])
 
+  const sortOptions = (
+    <>
+      <option value="popular">{t('catalog.sortPopular')}</option>
+      <option value="price-asc">{t('catalog.sortPriceAsc')}</option>
+      <option value="price-desc">{t('catalog.sortPriceDesc')}</option>
+      <option value="name">{t('catalog.sortName')}</option>
+    </>
+  )
+
   return (
     <section className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 pb-10 md:pb-14">
       <div className="flex flex-wrap items-end justify-between gap-2 mb-4 md:mb-5">
         <div className="min-w-0">
           <h2 className="text-[18px] sm:text-[22px] font-extrabold text-[#111827] tracking-[-0.02em]">
             {query.trim()
-              ? `Результаты по запросу «${query.trim()}»`
-              : 'Каталог товаров'}
+              ? t('catalog.resultsFor', { q: query.trim() })
+              : t('catalog.title')}
           </h2>
         </div>
         <span className="shrink-0 rounded-full bg-[#f3f4f6] px-3 py-1 text-[12px] text-[#6b7280]">
-          Найдено {filtered.length} {pluralProducts(filtered.length)}
+          {t('catalog.foundShort', {
+            n: filtered.length,
+            plural: productWord(filtered.length),
+          })}
         </span>
       </div>
 
@@ -330,10 +353,10 @@ export default function GuestSearchResults({
           className="inline-flex items-center gap-1.5 rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-[13px] font-medium text-[#374151]"
         >
           <SlidersHorizontal size={15} />
-          Фильтры
+          {t('catalog.filters')}
         </button>
         <label className="flex-1 min-w-0">
-          <span className="sr-only">Сортировка</span>
+          <span className="sr-only">{t('catalog.sort')}</span>
           <select
             value={sort}
             onChange={(e) => {
@@ -342,16 +365,13 @@ export default function GuestSearchResults({
             }}
             className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-[13px] text-[#374151] outline-none"
           >
-            <option value="popular">По популярности</option>
-            <option value="price-asc">Сначала дешевле</option>
-            <option value="price-desc">Сначала дороже</option>
-            <option value="name">По названию</option>
+            {sortOptions}
           </select>
         </label>
         <div className="inline-flex rounded-xl border border-[#e5e7eb] overflow-hidden">
           <button
             type="button"
-            aria-label="Сетка"
+            aria-label={t('catalog.grid')}
             onClick={() => setViewMode('grid')}
             className={`p-2 ${
               viewMode === 'grid'
@@ -363,7 +383,7 @@ export default function GuestSearchResults({
           </button>
           <button
             type="button"
-            aria-label="Список"
+            aria-label={t('catalog.list')}
             onClick={() => setViewMode('list')}
             className={`p-2 ${
               viewMode === 'list'
@@ -387,7 +407,7 @@ export default function GuestSearchResults({
           {/* Desktop toolbar */}
           <div className="mb-4 hidden lg:flex items-center justify-end gap-3">
             <label className="inline-flex items-center gap-2 text-[13px] text-[#6b7280]">
-              Сортировка:
+              {t('catalog.sort')}:
               <select
                 value={sort}
                 onChange={(e) => {
@@ -396,16 +416,13 @@ export default function GuestSearchResults({
                 }}
                 className="rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-[13px] text-[#374151] outline-none"
               >
-                <option value="popular">По популярности</option>
-                <option value="price-asc">Сначала дешевле</option>
-                <option value="price-desc">Сначала дороже</option>
-                <option value="name">По названию</option>
+                {sortOptions}
               </select>
             </label>
             <div className="inline-flex rounded-xl border border-[#e5e7eb] overflow-hidden">
               <button
                 type="button"
-                aria-label="Сетка"
+                aria-label={t('catalog.grid')}
                 onClick={() => setViewMode('grid')}
                 className={`p-2 ${
                   viewMode === 'grid'
@@ -417,7 +434,7 @@ export default function GuestSearchResults({
               </button>
               <button
                 type="button"
-                aria-label="Список"
+                aria-label={t('catalog.list')}
                 onClick={() => setViewMode('list')}
                 className={`p-2 ${
                   viewMode === 'list'
@@ -433,10 +450,10 @@ export default function GuestSearchResults({
           {pageItems.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-[#e5e7eb] bg-[#fafafa] px-4 py-16 text-center">
               <p className="text-[15px] font-semibold text-[#111827]">
-                Ничего не найдено
+                {t('catalog.empty')}
               </p>
               <p className="mt-1 text-[13px] text-[#6b7280]">
-                Попробуйте другой запрос или сбросьте фильтры
+                {t('catalog.resetFilters')}
               </p>
             </div>
           ) : (
@@ -460,11 +477,11 @@ export default function GuestSearchResults({
           {totalPages > 1 && (
             <nav
               className="mt-8 flex items-center justify-center gap-1.5"
-              aria-label="Страницы"
+              aria-label={t('catalog.pages')}
             >
               <button
                 type="button"
-                aria-label="Назад"
+                aria-label={t('home.prev')}
                 disabled={currentPage <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 className="grid h-9 w-9 place-items-center rounded-full border border-[#e5e7eb] text-slate-600 disabled:opacity-40"
@@ -496,7 +513,7 @@ export default function GuestSearchResults({
               )}
               <button
                 type="button"
-                aria-label="Вперёд"
+                aria-label={t('home.next')}
                 disabled={currentPage >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 className="grid h-9 w-9 place-items-center rounded-full border border-[#e5e7eb] text-slate-600 disabled:opacity-40"
@@ -512,16 +529,16 @@ export default function GuestSearchResults({
         <div className="fixed inset-0 z-[80] lg:hidden">
           <button
             type="button"
-            aria-label="Закрыть фильтры"
+            aria-label={t('catalog.closeFilters')}
             className="absolute inset-0 bg-black/40"
             onClick={() => setFilterOpen(false)}
           />
           <div className="absolute inset-y-0 right-0 w-full max-w-sm bg-white shadow-xl flex flex-col">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#eef2f6]">
-              <p className="text-[15px] font-bold text-[#111827]">Фильтры</p>
+              <p className="text-[15px] font-bold text-[#111827]">{t('catalog.filters')}</p>
               <button
                 type="button"
-                aria-label="Закрыть"
+                aria-label={t('nav.close')}
                 onClick={() => setFilterOpen(false)}
                 className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500"
               >
@@ -535,7 +552,7 @@ export default function GuestSearchResults({
                 onClick={() => setFilterOpen(false)}
                 className="w-full rounded-full bg-[#22c55e] hover:bg-[#16a34a] text-white font-semibold py-2.5 text-[14px]"
               >
-                Показать {filtered.length} {pluralProducts(filtered.length)}
+                {t('catalog.apply')} · {filtered.length} {productWord(filtered.length)}
               </button>
             </div>
           </div>

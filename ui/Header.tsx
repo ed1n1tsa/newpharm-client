@@ -29,15 +29,17 @@ import { useAuth } from './AuthContext'
 import { supabase } from '@/lib/supabase-browser'
 import { useCity } from './CityProvider'
 import { HOME_CATEGORIES } from './home/HomeCategories'
+import { useT } from '@/ui/LocaleProvider'
+import LanguageSwitcher from '@/ui/LanguageSwitcher'
 
 const DESKTOP_NAV = [
-  { href: '/', label: 'Главная' },
-  { href: '/catalog', label: 'Каталог' },
-  { href: '/doctors', label: 'Врачи' },
-  { href: '/branches', label: 'Филиалы' },
-  { href: '/#promos', label: 'Акции' },
-  { href: '/#news', label: 'Новости' },
-]
+  { href: '/', key: 'nav.home' },
+  { href: '/catalog', key: 'nav.catalog' },
+  { href: '/doctors', key: 'nav.doctors' },
+  { href: '/branches', key: 'nav.branches' },
+  { href: '/#promos', key: 'nav.promos' },
+  { href: '/#news', key: 'nav.news' },
+] as const
 
 type DrawerItem = {
   href: string
@@ -53,6 +55,7 @@ export default function Header() {
   const { count } = useCart()
   const { openAuth } = useAuth()
   const { city, cities, setCityId } = useCity()
+  const t = useT()
   const [loggedIn, setLoggedIn] = useState(false)
   const [cityOpen, setCityOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -87,7 +90,7 @@ export default function Header() {
   // Public guest chrome always uses public routes (even when logged in)
   const catalogHref = '/catalog'
   const authHref = loggedIn ? '/profile' : '#'
-  const authLabel = loggedIn ? 'Профиль' : 'Войти'
+  const authLabel = loggedIn ? t('nav.profile') : t('nav.login')
   const ordersHref = loggedIn ? '/orders' : '#'
   const favoritesHref = loggedIn ? '/profile' : '#'
 
@@ -109,30 +112,30 @@ export default function Header() {
   }
 
   const mainNav: DrawerItem[] = [
-    { href: '/', label: 'Главная', icon: Home },
+    { href: '/', label: t('nav.home'), icon: Home },
     {
       href: catalogHref,
-      label: 'Каталог товаров',
+      label: t('nav.catalogProducts'),
       icon: LayoutGrid,
       chevron: true,
       activeMatch: '/catalog',
     },
-    { href: '/doctors', label: 'Врачи и консультации', icon: Stethoscope },
-    { href: '/branches', label: 'Филиалы и аптеки', icon: MapPin },
-    { href: '/#promos', label: 'Акции', icon: Tag, activeMatch: '/__none__' },
-    { href: '/#news', label: 'Новости', icon: Newspaper, activeMatch: '/__none__' },
+    { href: '/doctors', label: t('nav.doctorsConsult'), icon: Stethoscope },
+    { href: '/branches', label: t('nav.branchesPharmacies'), icon: MapPin },
+    { href: '/#promos', label: t('nav.promos'), icon: Tag, activeMatch: '/__none__' },
+    { href: '/#news', label: t('nav.news'), icon: Newspaper, activeMatch: '/__none__' },
   ]
 
   const accountNav: DrawerItem[] = [
-    { href: favoritesHref, label: 'Избранное', icon: Heart },
-    { href: '/cart', label: 'Корзина', icon: ShoppingCart, badge: count },
-    { href: ordersHref, label: 'Мои заказы', icon: Package },
+    { href: favoritesHref, label: t('nav.favorites'), icon: Heart },
+    { href: '/cart', label: t('nav.cart'), icon: ShoppingCart, badge: count },
+    { href: ordersHref, label: t('nav.orders'), icon: Package },
   ]
 
   const infoNav: DrawerItem[] = [
-    { href: '/#faq', label: 'Помощь и FAQs', icon: HelpCircle },
-    { href: '/branches', label: 'Контакты', icon: Phone, activeMatch: '/__none__' },
-    { href: '/', label: 'О компании', icon: Info, activeMatch: '/__none__' },
+    { href: '/#faq', label: t('nav.helpFaq'), icon: HelpCircle },
+    { href: '/branches', label: t('nav.contacts'), icon: Phone, activeMatch: '/__none__' },
+    { href: '/', label: t('nav.about'), icon: Info, activeMatch: '/__none__' },
   ]
 
   function DrawerLink({
@@ -191,7 +194,7 @@ export default function Header() {
         <button
           type="button"
           className="absolute inset-0 bg-black/40"
-          aria-label="Закрыть меню"
+          aria-label={t('nav.closeMenu')}
           onClick={() => setMenuOpen(false)}
         />
         {/* z-[1200] keeps drawer above Leaflet panes/controls (~400–1000) */}
@@ -214,7 +217,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setMenuOpen(false)}
-              aria-label="Закрыть"
+              aria-label={t('nav.close')}
               className="grid place-items-center h-9 w-9 rounded-full bg-slate-100 text-slate-600"
             >
               <X size={18} />
@@ -229,9 +232,9 @@ export default function Header() {
                     <User size={18} />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[14px] font-bold text-[#111827]">Войдите в аккаунт</p>
+                    <p className="text-[14px] font-bold text-[#111827]">{t('nav.loginTitle')}</p>
                     <p className="mt-0.5 text-[11px] leading-snug text-[#6b7280]">
-                      Отслеживайте заказы, сохраняйте избранное и получайте акции
+                      {t('nav.loginHint')}
                     </p>
                   </div>
                 </div>
@@ -240,7 +243,7 @@ export default function Header() {
                   onClick={() => requireAuth()}
                   className="mt-3 w-full flex items-center justify-center rounded-full bg-[#22c55e] hover:bg-[#16a34a] text-white text-[13px] font-semibold py-2.5 transition"
                 >
-                  Войти
+                  {t('nav.login')}
                 </button>
               </div>
             )}
@@ -255,8 +258,8 @@ export default function Header() {
                   <User size={18} />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[14px] font-bold text-[#111827]">Мой профиль</p>
-                  <p className="text-[11px] text-[#6b7280]">Заказы, избранное, настройки</p>
+                  <p className="text-[14px] font-bold text-[#111827]">{t('nav.myProfile')}</p>
+                  <p className="text-[11px] text-[#6b7280]">{t('nav.profileHint')}</p>
                 </div>
                 <ChevronRight size={16} className="ml-auto text-slate-400" />
               </Link>
@@ -268,7 +271,7 @@ export default function Header() {
                   const Icon = item.icon
                   const active = isActive(item.href, item.activeMatch)
                   return (
-                    <div key={item.label}>
+                    <div key={item.href}>
                       <button
                         type="button"
                         onClick={() => setCatalogOpen((v) => !v)}
@@ -292,7 +295,7 @@ export default function Header() {
                             onClick={() => setMenuOpen(false)}
                             className="block rounded-xl px-3 py-2 text-[13px] text-slate-700 hover:bg-emerald-50"
                           >
-                            Все товары
+                            {t('nav.allProducts')}
                           </Link>
                           {HOME_CATEGORIES.map((c) => (
                             <Link
@@ -301,7 +304,7 @@ export default function Header() {
                               onClick={() => setMenuOpen(false)}
                               className="block rounded-xl px-3 py-2 text-[13px] text-slate-700 hover:bg-emerald-50"
                             >
-                              {c.title}
+                              {t('home.cat.' + c.key)}
                             </Link>
                           ))}
                         </div>
@@ -311,7 +314,7 @@ export default function Header() {
                 }
                 return (
                   <DrawerLink
-                    key={item.label}
+                    key={item.href + item.label}
                     item={item}
                     onClick={() => setMenuOpen(false)}
                   />
@@ -324,7 +327,7 @@ export default function Header() {
             <nav className="space-y-0.5">
               {accountNav.map((item) => (
                 <DrawerLink
-                  key={item.label}
+                  key={item.href + item.label}
                   item={item}
                   onClick={() => setMenuOpen(false)}
                 />
@@ -336,7 +339,7 @@ export default function Header() {
             <nav className="space-y-0.5">
               {infoNav.map((item) => (
                 <DrawerLink
-                  key={item.label}
+                  key={item.href + item.label}
                   item={item}
                   onClick={() => setMenuOpen(false)}
                 />
@@ -344,7 +347,8 @@ export default function Header() {
             </nav>
           </div>
 
-          <div className="border-t border-[#eef2f6] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="border-t border-[#eef2f6] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] space-y-2">
+            <LanguageSwitcher variant="pill" className="w-full justify-center" />
             <div className="relative">
               <button
                 type="button"
@@ -389,7 +393,7 @@ export default function Header() {
           <button
             type="button"
             className="lg:hidden p-1.5 -ml-1 text-slate-700 z-10"
-            aria-label="Меню"
+            aria-label={t('nav.menu')}
             onClick={() => setMenuOpen(true)}
           >
             <Menu size={20} />
@@ -410,7 +414,7 @@ export default function Header() {
             <span className="text-[15px] font-bold text-[#111827] tracking-tight">NewPharm</span>
           </Link>
 
-          <div className="relative hidden sm:block">
+          <div className="relative hidden sm:flex items-center gap-2">
             <button
               type="button"
               onClick={() => setCityOpen((v) => !v)}
@@ -420,12 +424,13 @@ export default function Header() {
               <span>{city.name}</span>
               <ChevronDown size={13} className="text-slate-400" />
             </button>
+            <LanguageSwitcher />
             {cityOpen && (
               <>
                 <button
                   type="button"
                   className="fixed inset-0 z-40 cursor-default"
-                  aria-label="Закрыть"
+                  aria-label={t('nav.close')}
                   onClick={() => setCityOpen(false)}
                 />
                 <ul className="absolute left-0 top-full mt-1.5 z-50 min-w-[150px] rounded-xl border border-slate-100 bg-white py-1.5 shadow-lg">
@@ -453,13 +458,14 @@ export default function Header() {
           <nav className="hidden lg:flex items-center gap-0.5 text-[13px] font-medium text-slate-700 ml-1">
             {DESKTOP_NAV.map((item) => {
               const href = navHref(item.href)
+              const label = t(item.key)
               const active =
                 item.href === '/'
                   ? pathname === '/'
                   : pathname === item.href || pathname.startsWith(item.href + '/')
               return (
                 <Link
-                  key={item.label}
+                  key={item.key}
                   href={href}
                   className={`px-2.5 py-1 rounded-full transition ${
                     active
@@ -467,7 +473,7 @@ export default function Header() {
                       : 'hover:bg-emerald-50 hover:text-emerald-700'
                   }`}
                 >
-                  {item.label}
+                  {label}
                 </Link>
               )
             })}
@@ -478,7 +484,7 @@ export default function Header() {
               <Link
                 href={favoritesHref}
                 className="p-1.5 rounded-full hover:bg-emerald-50"
-                aria-label="Избранное"
+                aria-label={t('nav.favoritesAria')}
               >
                 <Heart size={17} />
               </Link>
@@ -487,7 +493,7 @@ export default function Header() {
                 type="button"
                 onClick={() => openAuth('login')}
                 className="p-1.5 rounded-full hover:bg-emerald-50"
-                aria-label="Избранное"
+                aria-label={t('nav.favoritesAria')}
               >
                 <Heart size={17} />
               </button>
@@ -495,7 +501,7 @@ export default function Header() {
             <Link
               href="/cart"
               className="cart-icon relative p-1.5 rounded-full hover:bg-emerald-50"
-              aria-label="Корзина"
+              aria-label={t('nav.cartAria')}
             >
               <ShoppingCart size={17} />
               {count > 0 && (
@@ -519,7 +525,7 @@ export default function Header() {
                 className="hidden md:inline-flex items-center gap-1 ml-1 rounded-full px-2.5 py-1 text-[13px] hover:bg-emerald-50"
               >
                 <User size={15} />
-                Войти
+                {t('nav.login')}
               </button>
             )}
           </div>

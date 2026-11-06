@@ -5,31 +5,32 @@ import { useRouter } from 'next/navigation'
 import { Flame } from 'lucide-react'
 import HomeIcon from './HomeIcon'
 import SearchBox from '@/ui/SearchBox'
+import { useT } from '@/ui/LocaleProvider'
 
 const POPULAR = ['Парацетамол', 'Витамин D', 'Омега-3', 'Ибупрофен']
 
 const USPS = [
   {
     icon: '/home/icon-truck.png',
-    title: 'Быстрый заказ',
-    text: 'Бронь в ближайшей аптеке',
+    titleKey: 'home.usp.fastOrder',
+    textKey: 'home.usp.fastOrderText',
   },
   {
     icon: '/home/icon-shield.png',
-    title: 'Оригинальные товары',
-    text: 'Только сертифицированные',
+    titleKey: 'home.usp.original',
+    textKey: 'home.usp.originalText',
   },
   {
     icon: '/home/icon-card.png',
-    title: 'Удобная оплата',
-    text: 'Онлайн или при получении',
+    titleKey: 'home.usp.pay',
+    textKey: 'home.usp.payText',
   },
   {
     icon: '/home/icon-headset.png',
-    title: 'Консультации с врачами',
-    text: 'Онлайн и офлайн',
+    titleKey: 'home.usp.doctors',
+    textKey: 'home.usp.doctorsText',
   },
-]
+] as const
 
 export default function HomeHero({
   catalogHref,
@@ -41,6 +42,7 @@ export default function HomeHero({
   showPopular?: boolean
 }) {
   const router = useRouter()
+  const t = useT()
 
   function goSearch(term: string) {
     const query = term.trim()
@@ -59,17 +61,17 @@ export default function HomeHero({
           <div className="grid grid-cols-[1fr_auto] gap-3 items-start">
             <div className="min-w-0 lg:max-w-xl lg:pt-1">
               <h1 className="text-[22px] leading-[1.2] sm:text-[28px] lg:text-[34px] lg:leading-[1.18] font-extrabold text-[#111827] tracking-[-0.02em] max-w-[18ch] lg:max-w-[16ch]">
-                Лекарства, товары для здоровья в одном месте
+                {t('home.heroTitle')}
               </h1>
               <p className="mt-2 lg:mt-2.5 text-[13px] lg:text-[15px] text-[#6b7280] leading-snug max-w-[36ch] hidden sm:block">
-                Найдите нужные лекарства, забронируйте в аптеке и получите консультацию врача
+                {t('home.heroSubtitle')}
               </p>
             </div>
 
             <div className="relative w-[158px] sm:w-[220px] lg:hidden">
               <Image
                 src="/home/hero-bottles.png"
-                alt="Лекарства NewPharm"
+                alt={t('home.heroAlt')}
                 width={1373}
                 height={756}
                 priority
@@ -86,7 +88,7 @@ export default function HomeHero({
               <div className="flex flex-nowrap items-center gap-1.5 text-[12px] lg:text-[13px] overflow-x-auto no-scrollbar">
                 <span className="inline-flex items-center gap-1 text-[#9ca3af] shrink-0">
                   <Flame size={12} className="text-orange-500" />
-                  Популярное:
+                  {t('home.popular')}
                 </span>
                 {POPULAR.map((term, i) => (
                   <button
@@ -108,7 +110,7 @@ export default function HomeHero({
           <div className="pointer-events-none absolute hidden lg:block top-0 right-0 w-[560px] xl:w-[600px] -translate-y-8 xl:-translate-y-10 translate-x-4 xl:translate-x-6">
             <Image
               src="/home/hero-bottles.png"
-              alt="Лекарства NewPharm"
+              alt={t('home.heroAlt')}
               width={1373}
               height={756}
               priority
@@ -122,13 +124,15 @@ export default function HomeHero({
         {/* Desktop USP */}
         <div className="mt-6 lg:mt-8 hidden md:grid grid-cols-4 gap-6 lg:gap-8">
           {USPS.map((u) => (
-            <div key={u.title} className="flex items-start gap-2.5">
+            <div key={u.titleKey} className="flex items-start gap-2.5">
               <span className="grid place-items-center h-9 w-9 shrink-0">
                 <HomeIcon src={u.icon} alt="" size={32} />
               </span>
               <div className="min-w-0">
-                <p className="text-[14px] font-bold text-[#111827] leading-tight">{u.title}</p>
-                <p className="mt-0.5 text-[12px] text-[#9ca3af] leading-snug">{u.text}</p>
+                <p className="text-[14px] font-bold text-[#111827] leading-tight">
+                  {t(u.titleKey)}
+                </p>
+                <p className="mt-0.5 text-[12px] text-[#9ca3af] leading-snug">{t(u.textKey)}</p>
               </div>
             </div>
           ))}
@@ -138,12 +142,12 @@ export default function HomeHero({
         <div className="mt-4 grid grid-cols-4 gap-1.5 md:hidden">
           {USPS.map((u) => (
             <div
-              key={u.title}
+              key={u.titleKey}
               className="rounded-[14px] bg-white ring-1 ring-[#eef2f6] shadow-[0_2px_8px_rgba(15,23,42,0.04)] px-1 py-2.5 flex flex-col items-center text-center gap-1.5"
             >
               <HomeIcon src={u.icon} alt="" size={26} />
               <p className="text-[10px] font-semibold text-[#111827] leading-tight px-0.5">
-                {u.title}
+                {t(u.titleKey)}
               </p>
             </div>
           ))}

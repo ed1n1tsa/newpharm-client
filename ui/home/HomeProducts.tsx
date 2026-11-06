@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ChevronLeft, ChevronRight, Heart, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/ui/CartContext'
 import type { FeaturedProduct } from '@/lib/homepage-cms'
+import { useT } from '@/ui/LocaleProvider'
 
 export type HomeProduct = {
   id: string
@@ -31,6 +32,7 @@ export default function HomeProducts({
   catalogHref: string
 }) {
   const { add } = useCart()
+  const t = useT()
   const [tab, setTab] = useState<Tab>('popular')
   const [fav, setFav] = useState<Record<string, boolean>>({})
   const scroller = useRef<HTMLDivElement>(null)
@@ -47,9 +49,9 @@ export default function HomeProducts({
   }, [products, featured, tab])
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'popular', label: 'Популярные' },
-    { id: 'new', label: 'Новинки' },
-    { id: 'discount', label: 'Со скидкой' },
+    { id: 'popular', label: t('home.tab.popular') },
+    { id: 'new', label: t('home.tab.new') },
+    { id: 'discount', label: t('home.tab.discount') },
   ]
 
   function scrollBy(dir: number) {
@@ -61,24 +63,26 @@ export default function HomeProducts({
   return (
     <section className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-5 relative">
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
-        <h2 className="text-[18px] md:text-[22px] font-bold text-[#111827]">Популярные товары</h2>
+        <h2 className="text-[18px] md:text-[22px] font-bold text-[#111827]">
+          {t('home.popularProducts')}
+        </h2>
         <div className="flex flex-wrap items-center gap-1.5 sm:ml-auto">
-          {tabs.map((t) => (
+          {tabs.map((tabItem) => (
             <button
-              key={t.id}
+              key={tabItem.id}
               type="button"
-              onClick={() => setTab(t.id)}
+              onClick={() => setTab(tabItem.id)}
               className={`rounded-full px-3 py-1 text-[12px] font-semibold transition ${
-                tab === t.id
+                tab === tabItem.id
                   ? 'bg-[#22c55e] text-white'
                   : 'bg-[#f3f4f6] text-[#6b7280]'
               }`}
             >
-              {t.label}
+              {tabItem.label}
             </button>
           ))}
           <Link href={catalogHref} className="text-[13px] font-semibold text-[#22c55e] ml-1">
-            Все товары →
+            {t('home.allProducts')}
           </Link>
         </div>
       </div>
@@ -86,7 +90,7 @@ export default function HomeProducts({
       <div className="relative">
         <button
           type="button"
-          aria-label="Назад"
+          aria-label={t('home.prev')}
           onClick={() => scrollBy(-1)}
           className="hidden md:grid absolute -left-3 top-1/2 -translate-y-1/2 z-10 place-items-center h-9 w-9 rounded-full bg-white shadow ring-1 ring-[#e5e7eb] text-slate-600"
         >
@@ -94,7 +98,7 @@ export default function HomeProducts({
         </button>
         <button
           type="button"
-          aria-label="Вперёд"
+          aria-label={t('home.next')}
           onClick={() => scrollBy(1)}
           className="hidden md:grid absolute -right-3 top-1/2 -translate-y-1/2 z-10 place-items-center h-9 w-9 rounded-full bg-white shadow ring-1 ring-[#e5e7eb] text-slate-600"
         >

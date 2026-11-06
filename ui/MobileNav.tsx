@@ -6,10 +6,12 @@ import { useEffect, useState } from 'react'
 import { Home, LayoutGrid, Stethoscope, Tag, User } from 'lucide-react'
 import { supabase } from '@/lib/supabase-browser'
 import { useAuth } from '@/ui/AuthContext'
+import { useT } from '@/ui/LocaleProvider'
 
 export default function MobileNav() {
   const pathname = usePathname()
   const { openAuth } = useAuth()
+  const t = useT()
   const [loggedIn, setLoggedIn] = useState(false)
 
   useEffect(() => {
@@ -21,10 +23,10 @@ export default function MobileNav() {
   }, [])
 
   const navItems = [
-    { href: '/', label: 'Главная', icon: Home },
-    { href: '/catalog', label: 'Каталог', icon: LayoutGrid },
-    { href: '/doctors', label: 'Врачи', icon: Stethoscope },
-    { href: '/#promos', label: 'Акции', icon: Tag },
+    { href: '/', label: t('nav.home'), icon: Home },
+    { href: '/catalog', label: t('nav.catalog'), icon: LayoutGrid },
+    { href: '/doctors', label: t('nav.doctors'), icon: Stethoscope },
+    { href: '/#promos', label: t('nav.promos'), icon: Tag },
   ]
 
   return (
@@ -38,7 +40,7 @@ export default function MobileNav() {
               : pathname === pathOnly || pathname.startsWith(pathOnly + '/')
           return (
             <Link
-              key={label}
+              key={href}
               href={href}
               className="relative flex flex-col items-center gap-0.5 text-[10px] min-w-[56px]"
             >
@@ -77,7 +79,7 @@ export default function MobileNav() {
                   : 'text-slate-500'
               }
             >
-              Профиль
+              {t('nav.profile')}
             </span>
           </Link>
         ) : (
@@ -89,7 +91,7 @@ export default function MobileNav() {
             <span className="grid place-items-center h-7 w-7 rounded-full text-slate-400">
               <User size={18} />
             </span>
-            <span className="text-slate-500">Войти</span>
+            <span className="text-slate-500">{t('nav.login')}</span>
           </button>
         )}
       </div>

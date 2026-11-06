@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { isSupabaseAdminConfigured, supabaseAdmin } from '@/lib/supabase-admin'
 import {
   CMS_BUCKET,
   CMS_OBJECT,
@@ -8,6 +8,7 @@ import {
 
 export async function readHomepageCms(): Promise<HomepageCms> {
   try {
+    if (!isSupabaseAdminConfigured()) return DEFAULT_HOMEPAGE_CMS
     const { data, error } = await supabaseAdmin.storage
       .from(CMS_BUCKET)
       .download(CMS_OBJECT)
@@ -27,6 +28,9 @@ export async function readHomepageCms(): Promise<HomepageCms> {
 }
 
 export async function writeHomepageCms(cms: HomepageCms): Promise<void> {
+  if (!isSupabaseAdminConfigured()) {
+    throw new Error('CMS write requires Supabase admin credentials')
+  }
   const payload = {
     ...cms,
     updatedAt: new Date().toISOString(),

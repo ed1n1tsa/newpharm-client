@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import HomeIcon from './HomeIcon'
+import { useT } from '@/ui/LocaleProvider'
 
 export type HomeCategory = {
   key: string
@@ -62,12 +63,15 @@ export const HOME_CATEGORIES: HomeCategory[] = [
 ]
 
 export default function HomeCategories({ catalogHref }: { catalogHref: string }) {
+  const t = useT()
   return (
     <section className="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-5">
       <div className="flex items-end justify-between mb-3">
-        <h2 className="text-[18px] md:text-[22px] font-bold text-[#111827]">Категории</h2>
+        <h2 className="text-[18px] md:text-[22px] font-bold text-[#111827]">
+          {t('home.categories')}
+        </h2>
         <Link href={catalogHref} className="text-[13px] font-semibold text-[#22c55e]">
-          Все категории →
+          {t('home.allCategories')}
         </Link>
       </div>
 
@@ -93,7 +97,7 @@ export default function HomeCategories({ catalogHref }: { catalogHref: string })
                   active ? 'text-[#166534]' : 'text-[#374151]'
                 }`}
               >
-                {c.title}
+                {t('home.cat.' + c.key)}
               </span>
             </Link>
           )
