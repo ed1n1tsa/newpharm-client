@@ -119,8 +119,10 @@ export async function GET() {
       });
     }
 
-    // 💾 Сохраняем товары в Supabase
-    const { error } = await sb.from("products").upsert(products, { onConflict: "external_id_1c" });
+    // Insert-only / DO NOTHING on conflict — never overwrite image_url on existing rows
+    const { error } = await sb
+      .from("products")
+      .upsert(products, { onConflict: "external_id_1c", ignoreDuplicates: true });
     if (error) throw error;
 
     console.log(`✅ Успешно обновлено ${products.length} товаров`);

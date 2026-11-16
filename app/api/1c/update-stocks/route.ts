@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isSupabaseAdminConfigured, supabaseAdmin } from "@/lib/supabase-admin";
 import { fetchOnecCatalog } from "@/lib/onec-catalog";
+import { authorizeOnecSync } from "@/lib/onec-sync-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,15 +19,12 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const expected = process.env.ONE_C_SECRET?.trim();
-  if (expected) {
-    const got =
-      req.headers.get("x-onec-secret") ||
-      req.nextUrl.searchParams.get("secret") ||
-      "";
-    if (got !== expected) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
+  const auth = await authorizeOnecSync(req);
+  if (!auth.ok) {
+    return NextResponse.json(
+      { success: false, error: auth.error },
+      { status: auth.status }
+    );
   }
 
   try {

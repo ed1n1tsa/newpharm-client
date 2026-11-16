@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "set NEXT_DISABLE_ESLINT=1 && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:onec-merge": "tsx scripts/test-onec-merge.mjs"
   },
   "dependencies": {
     "@directus/sdk": "^20.0.0",
@@ -41,6 +42,7 @@
     "eslint-config-next": "15.3.5",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

@@ -15,8 +15,12 @@ type SyncResult = {
   updated?: number;
   deactivated?: number;
   stocksUpserted?: number;
+  stocksZeroed?: number;
   stocksRpc?: string;
   stocksRpcError?: string;
+  legacyIdMatches?: number;
+  partial?: boolean;
+  queueLogError?: string;
   sampleInserts?: string[];
   sampleUpdates?: string[];
   sampleDeactivates?: string[];
@@ -43,9 +47,12 @@ export default function IntegrationPage() {
       dryRun
         ? `Будет: insert ${r.toInsert ?? 0} · update ${r.toUpdate ?? 0} · deactivate ${r.toDeactivate ?? 0}`
         : `Сделано: insert ${r.inserted ?? 0} · update ${r.updated ?? 0} · deactivate ${r.deactivated ?? 0}`,
-      `Остатки product_stocks: ${r.stocksUpserted ?? 0} · RPC: ${r.stocksRpc ?? '—'}`,
+      `Остатки: upsert ${r.stocksUpserted ?? 0}, zeroed ${r.stocksZeroed ?? 0} · RPC: ${r.stocksRpc ?? '—'}`,
     ];
+    if (r.legacyIdMatches) lines.push(`Legacy id matches: ${r.legacyIdMatches}`);
+    if (r.partial) lines.push('⚠️ Частичный прогон — часть записей уже применена');
     if (r.stocksRpcError) lines.push(`RPC warning: ${r.stocksRpcError}`);
+    if (r.queueLogError) lines.push(`Queue log: ${r.queueLogError}`);
     if (r.sampleInserts?.length) {
       lines.push('Примеры новых: ' + r.sampleInserts.slice(0, 3).join(' | '));
     }
@@ -119,14 +126,15 @@ export default function IntegrationPage() {
         </div>
 
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-900 max-w-2xl">
-          Автозапуск: вызывайте{' '}
+          Доступ: войдите как CMS-админ (cookie) или передайте{' '}
+          <code className="text-xs bg-white/80 px-1 rounded">ONE_C_SECRET</code> /{' '}
+          <code className="text-xs bg-white/80 px-1 rounded">CRON_SECRET</code>.
+          Автозапуск: cron →{' '}
           <code className="text-xs bg-white/80 px-1 rounded">
             GET /api/1c/sync-catalog
           </code>{' '}
-          по cron (раз в 5–15 мин). Если задан{' '}
-          <code className="text-xs bg-white/80 px-1 rounded">ONE_C_SECRET</code> —
-          передайте его в заголовке{' '}
-          <code className="text-xs bg-white/80 px-1 rounded">x-onec-secret</code>.
+          с <code className="text-xs bg-white/80 px-1 rounded">Authorization: Bearer …</code>{' '}
+          или <code className="text-xs bg-white/80 px-1 rounded">x-onec-secret</code>.
         </div>
 
         <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">

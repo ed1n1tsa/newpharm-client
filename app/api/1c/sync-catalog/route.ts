@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isSupabaseAdminConfigured, supabaseAdmin } from "@/lib/supabase-admin";
 import { syncCatalogFromOnec } from "@/lib/onec-catalog-sync";
+import { authorizeOnecSync } from "@/lib/onec-sync-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,9 +12,11 @@ export const maxDuration = 300;
  *
  * GET /api/1c/sync-catalog
  * GET /api/1c/sync-catalog?dry_run=1
- * GET /api/1c/sync-catalog?deactivate=0
  *
- * Optional cron auth: header x-onec-secret or ?secret= must match ONE_C_SECRET when set.
+ * Auth (any one):
+ * - header x-onec-secret / ?secret = ONE_C_SECRET
+ * - Authorization: Bearer CRON_SECRET | ONE_C_SECRET
+ * - CMS admin cookie
  */
 export async function GET(req: NextRequest) {
   if (!isSupabaseAdminConfigured()) {
@@ -23,21 +26,12 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const expected =
-    process.env.ONE_C_SECRET?.trim() || process.env.CRON_SECRET?.trim();
-  if (expected) {
-    const auth = req.headers.get("authorization") || "";
-    const bearer = auth.toLowerCase().startsWith("bearer ")
-      ? auth.slice(7).trim()
-      : "";
-    const got =
-      req.headers.get("x-onec-secret") ||
-      req.nextUrl.searchParams.get("secret") ||
-      bearer ||
-      "";
-    if (got !== expected) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
+  const auth = await authorizeOnecSync(req);
+  if (!auth.ok) {
+    return NextResponse.json(
+      { ok: false, error: auth.error },
+      { status: auth.status }
+    );
   }
 
   const dryRun =
