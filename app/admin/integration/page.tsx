@@ -129,12 +129,13 @@ export default function IntegrationPage() {
           Доступ: войдите как CMS-админ (cookie) или передайте{' '}
           <code className="text-xs bg-white/80 px-1 rounded">ONE_C_SECRET</code> /{' '}
           <code className="text-xs bg-white/80 px-1 rounded">CRON_SECRET</code>.
-          Автозапуск: cron →{' '}
+          Vercel Hobby: встроенный cron раз в сутки (01:00 UTC ≈ 06:00 Алматы).
+          Чаще — внешний cron на{' '}
           <code className="text-xs bg-white/80 px-1 rounded">
             GET /api/1c/sync-catalog
           </code>{' '}
-          с <code className="text-xs bg-white/80 px-1 rounded">Authorization: Bearer …</code>{' '}
-          или <code className="text-xs bg-white/80 px-1 rounded">x-onec-secret</code>.
+          с Bearer / <code className="text-xs bg-white/80 px-1 rounded">x-onec-secret</code>,
+          либо Vercel Pro.
         </div>
 
         <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
