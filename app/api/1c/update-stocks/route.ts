@@ -1,30 +1,49 @@
-import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { NextRequest, NextResponse } from "next/server";
+import { isSupabaseAdminConfigured, supabaseAdmin } from "@/lib/supabase-admin";
+import { fetchOnecCatalog } from "@/lib/onec-catalog";
+import { authorizeOnecSync } from "@/lib/onec-sync-auth";
 
-const ONE_C_URL =
-  'https://ws3.smartsystem.kz/APT_NEWPHARM/hs/counterparties/counterparties_list'
-const ONE_C_AUTH =
-  'Basic ' + Buffer.from('bot_ai:40zuduH').toString('base64')
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 300;
 
-export async function GET() {
+/**
+ * Refresh stocks from 1C via RPC update_stocks_from_1c.
+ * Uses ONEC_* env (no hardcoded credentials).
+ */
+export async function GET(req: NextRequest) {
+  if (!isSupabaseAdminConfigured()) {
+    return NextResponse.json(
+      { success: false, error: "Supabase admin не настроен" },
+      { status: 503 }
+    );
+  }
+
+  const auth = await authorizeOnecSync(req);
+  if (!auth.ok) {
+    return NextResponse.json(
+      { success: false, error: auth.error },
+      { status: auth.status }
+    );
+  }
+
   try {
-    console.log('📡 Загружаем данные из 1С...')
-    const res = await fetch(ONE_C_URL, { headers: { Authorization: ONE_C_AUTH } })
-    if (!res.ok) throw new Error(`Ошибка запроса: ${res.statusText}`)
-
-    const json = await res.json()
-    console.log(`📦 Получено ${json.length} товаров от 1С`)
-
-    // 💾 Вызываем твою SQL-функцию
-    const { error } = await supabaseAdmin.rpc('update_stocks_from_1c', { json_data: json })
-    if (error) throw error
+    const { rawCount, raw } = await fetchOnecCatalog();
+    const { error } = await supabaseAdmin.rpc("update_stocks_from_1c", {
+      json_data: raw,
+    });
+    if (error) throw error;
 
     return NextResponse.json({
       success: true,
-      message: `✅ Обновление успешно завершено (${json.length} позиций).`,
-    })
+      message: `Обновление остатков завершено (${rawCount} позиций из 1С).`,
+      count: rawCount,
+    });
   } catch (err: any) {
-    console.error('❌ Ошибка обновления:', err.message)
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 })
+    console.error("update-stocks:", err?.message || err);
+    return NextResponse.json(
+      { success: false, error: err?.message || String(err) },
+      { status: 500 }
+    );
   }
 }

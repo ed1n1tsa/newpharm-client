@@ -77,15 +77,22 @@ export async function POST(req: NextRequest) {
     const productIds = items.map((i) => i.productId);
     const { data: products, error: pErr } = await supabaseAdmin
       .from("products")
-      .select("id, name, price")
+      .select("id, name, price, is_active")
       .in("id", productIds);
     if (pErr) throw pErr;
 
     const productMap = new Map((products || []).map((p) => [p.id, p]));
     for (const item of items) {
-      if (!productMap.has(item.productId)) {
+      const product = productMap.get(item.productId);
+      if (!product) {
         return NextResponse.json(
           { ok: false, error: `Товар не найден: ${item.productId}` },
+          { status: 400 }
+        );
+      }
+      if (product.is_active === false) {
+        return NextResponse.json(
+          { ok: false, error: `Товар недоступен: ${product.name || item.productId}` },
           { status: 400 }
         );
       }
